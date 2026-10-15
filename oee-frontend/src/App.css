@@ -1,0 +1,1899 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+  color: #202c40;
+  background: #f3f6fb;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  font-weight: 400;
+  font-size: 13px;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 360px; min-height: 100vh; }
+button, input, select { font: inherit; }
+button { cursor: pointer; }
+button:focus-visible, input:focus-visible, select:focus-visible {
+  outline: 2px solid #4f8df7;
+  outline-offset: 2px;
+}
+.app-shell { min-height: 100vh; }
+.sidebar {
+  position: fixed; inset: 0 auto 0 0; z-index: 10;
+  display: flex; flex-direction: column; width: 244px;
+  color: #c1cce0; background: #111d31;
+  border-right: 1px solid #25344c;
+}
+.brand { display: flex; align-items: center; gap: 11px; padding: 23px 19px 20px; border-bottom: 1px solid #28364a; }
+.brand-symbol {
+  display: grid; place-items: center; width: 38px; height: 38px;
+  border-radius: 11px; color: white; background: linear-gradient(135deg,#3985ff,#1552ca);
+  font-size: 24px; font-weight: 800;
+}
+.brand strong { display: block; color: #fff; font-size: 15px; letter-spacing: .5px; }
+.brand strong span { color: #64a0ff; }
+.brand small { display: block; margin-top: 5px; font-size: 8px; letter-spacing: 1.2px; color: #8294af; }
+.plant-selector {
+  display: flex; align-items: center; gap: 10px; margin: 16px 12px;
+  padding: 11px; border: 1px solid #34445e; background: #1a2940; border-radius: 9px;
+}
+.plant-avatar,.user-avatar { display: grid; place-items: center; width: 33px; height: 33px; flex-shrink: 0; border-radius: 8px; background: #244d83; color: #b8d6ff; font-weight: 700; }
+.plant-selector strong,.user-profile strong { display: block; color: #f3f6ff; font-size: 11px; }
+.plant-selector small,.user-profile small { display: block; margin-top: 4px; font-size: 10px; color: #8fa0b9; }
+.plant-chevron { margin-left: auto; color: #8598b4; }
+.sidebar-nav { overflow-y: auto; flex: 1; padding: 2px 11px 14px; }
+.nav-group { margin-bottom: 19px; }
+.nav-group-title { padding: 8px 10px; color: #6f829f; font-size: 9px; font-weight: 700; letter-spacing: 1.2px; }
+.nav-item {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  padding: 10px 11px; margin: 2px 0; border: 0; border-radius: 7px;
+  background: transparent; color: #aebbd0; text-align: left; font-size: 11px;
+  transition: .15s ease;
+}
+.nav-item:hover { background: #1c2b42; color: #fff; }
+.nav-item.active { color: white; background: linear-gradient(90deg,#2369df,#2358b6); box-shadow: 0 5px 14px #0b142a55; }
+.nav-icon { display: inline-grid; place-items: center; width: 18px; font-size: 16px; }
+.nav-dot,.icon-button i { width: 7px; height: 7px; border-radius: 50%; background: #33d6a0; margin-left: auto; }
+.sidebar-bottom { padding: 12px; border-top: 1px solid #28364a; }
+.server-status { display: flex; align-items: center; gap: 10px; padding: 10px 7px 14px; border-bottom: 1px solid #29374b; }
+.server-status strong { color: #e5edfb; font-size: 10px; }
+.server-status small { display: block; margin-top: 4px; color: #8193ad; font-size: 9px; }
+.pulse-dot,.live-dot { display: inline-block; width: 7px; height: 7px; flex-shrink: 0; border-radius: 50%; background: #23c98b; box-shadow: 0 0 0 3px #23c98b20; }
+.user-profile { display: flex; align-items: center; gap: 10px; padding: 14px 3px 2px; }
+.user-avatar { border-radius: 50%; background: #34435b; color: #fff; }
+
+.main-content { min-height: 100vh; margin-left: 244px; }
+.topbar {
+  height: 57px; display: flex; align-items: center; justify-content: space-between;
+  padding: 0 29px; background: #fff; border-bottom: 1px solid #e4eaf2;
+}
+.breadcrumb { display: flex; align-items: center; gap: 11px; color: #8390a5; font-size: 11px; }
+.breadcrumb strong { color: #26364e; font-weight: 600; }
+.topbar-right { display: flex; align-items: center; gap: 19px; }
+.connection-label { display: flex; align-items: center; gap: 8px; color: #3b8e73; font-size: 9px; font-weight: 700; letter-spacing: .6px; }
+.icon-button { position: relative; border: 0; background: none; color: #62718a; font-size: 20px; }
+.icon-button i { position: absolute; top: 1px; right: -1px; width: 6px; height: 6px; }
+.top-date { padding: 8px 11px; border: 1px solid #e3e8f0; border-radius: 6px; color: #66748a; font-size: 10px; }
+.page-content { max-width: 1700px; margin: auto; padding: 27px 29px 20px; }
+.page-title-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; margin-bottom: 22px; }
+.eyebrow { color: #3975d6; font-size: 9px; font-weight: 800; letter-spacing: 1.4px; }
+h1 { margin: 7px 0 5px; color: #19283e; font-size: 25px; letter-spacing: -.7px; }
+.page-subtitle { margin: 0; color: #7b899e; font-size: 11px; }
+.page-filters { display: flex; align-items: flex-end; gap: 10px; }
+.filter-box { display: flex; flex-direction: column; gap: 6px; }
+.filter-box span { color: #8793a7; font-size: 9px; }
+.filter-box input,.filter-box select {
+  height: 34px; min-width: 135px; padding: 0 9px;
+  color: #33435b; background: #fff; border: 1px solid #dfe6ef; border-radius: 6px; font-size: 10px;
+}
+.primary-button { height: 34px; padding: 0 14px; border: 0; border-radius: 6px; background: #2166d4; color: white; font-size: 10px; font-weight: 600; }
+.primary-button:hover { background: #1754b7; }
+.shift-banner { display: flex; align-items: center; gap: 12px; padding: 13px 16px; margin-bottom: 25px; background: #eaf2ff; border: 1px solid #d7e6ff; border-radius: 8px; }
+.shift-icon { display: grid; place-items: center; width: 33px; height: 33px; color: #2867c6; background: #d8e7ff; border-radius: 8px; font-size: 19px; }
+.shift-banner strong { color: #234775; font-size: 11px; }
+.shift-banner p { margin: 4px 0 0; color: #6e83a2; font-size: 10px; }
+.shift-right { display: flex; align-items: center; gap: 8px; margin-left: auto; color: #4e77b2; font-size: 9px; font-weight: 800; letter-spacing: .5px; }
+.live-dot { background: #4386ef; box-shadow: 0 0 0 3px #4386ef20; }
+.section-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 23px 0 13px; }
+.section-heading h2 { margin: 0; color: #24334a; font-size: 14px; font-weight: 700; }
+.section-heading p { margin: 5px 0 0; color: #8793a6; font-size: 10px; }
+.section-action { display: flex; align-items: center; gap: 10px; }
+.demo-tag { padding: 5px 8px; border-radius: 4px; color: #a06d20; background: #fff4db; font-size: 8px; font-weight: 800; letter-spacing: .4px; }
+.muted-small { color: #8a97aa; font-size: 9px; }
+.kpi-grid { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 14px; }
+.kpi-card { position: relative; overflow: hidden; padding: 16px 17px 15px; border: 1px solid #e8edf4; border-radius: 9px; background: white; box-shadow: 0 2px 5px #22334d04; }
+.kpi-top { display: flex; align-items: center; justify-content: space-between; }
+.kpi-label { color: #78869b; font-size: 10px; font-weight: 600; }
+.kpi-icon { display: grid; place-items: center; width: 31px; height: 31px; border-radius: 8px; font-size: 17px; }
+.kpi-icon.blue { color: #2f72e2; background: #e8f1ff; }
+.kpi-icon.green { color: #1ba777; background: #e1f7ed; }
+.kpi-icon.purple { color: #8a5be0; background: #f0e9ff; }
+.kpi-icon.orange { color: #df8b35; background: #fff0df; }
+.kpi-value { margin: 14px 0 7px; color: #24334a; font-size: 27px; font-weight: 800; letter-spacing: -1px; }
+.kpi-value span { margin-left: 3px; font-size: 15px; color: #8693a6; }
+.kpi-bottom { min-height: 13px; color: #8995a8; font-size: 9px; }
+.kpi-line { position: absolute; bottom: 0; left: 0; right: 0; height: 3px; }
+.kpi-line.blue { background: #4183ef; }
+.kpi-line.green { background: #2ab88a; }
+.kpi-line.purple { background: #9670e8; }
+.kpi-line.orange { background: #eaa04b; }
+
+.cell-grid { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 11px; }
+.cell-card { min-width: 0; padding: 13px 12px 11px; text-align: left; color: #26364d; background: #fff; border: 1px solid #e3eaf3; border-radius: 8px; transition: .15s ease; }
+.cell-card:hover { transform: translateY(-2px); border-color: #9dbef7; box-shadow: 0 5px 14px #1e3c680c; }
+.cell-card.selected { border-color: #4e89ef; box-shadow: 0 0 0 1px #4e89ef25; background: #fbfdff; }
+.cell-card.reserved { background: #fafbfd; }
+.cell-card-top { display: flex; justify-content: space-between; align-items: center; gap: 4px; }
+.cell-letter { color: #3675d7; font-size: 9px; font-weight: 800; letter-spacing: .5px; }
+.cell-status { color: #29946f; font-size: 7px; font-weight: 800; }
+.cell-status.status-muted { color: #99a4b4; }
+.cell-name { display: block; overflow: hidden; margin: 11px 0 14px; color: #2c3b50; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.cell-metrics { display: flex; gap: 12px; }
+.cell-metrics div { display: flex; flex-direction: column; gap: 4px; }
+.cell-metrics strong { font-size: 15px; }
+.cell-metrics span { color: #8b97a9; font-size: 8px; }
+.cell-progress { overflow: hidden; height: 4px; margin-top: 13px; background: #edf1f7; border-radius: 5px; }
+.cell-progress span { display: block; height: 100%; background: #3e82ee; border-radius: 5px; }
+.cell-footer { display: flex; justify-content: space-between; margin-top: 9px; color: #8491a4; font-size: 8px; }
+
+.two-column { display: grid; grid-template-columns: 1.02fr 1fr; gap: 15px; margin-top: 23px; }
+.panel { min-width: 0; padding: 17px; background: #fff; border: 1px solid #e5ebf3; border-radius: 9px; box-shadow: 0 2px 7px #1c335405; }
+.panel .section-heading { margin: 0 0 17px; }
+.live-label { display: flex; align-items: center; gap: 7px; color: #3a9476; font-size: 8px; font-weight: 800; }
+.status-legend { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 14px; color: #8290a3; font-size: 9px; }
+.status-legend span { display: flex; align-items: center; gap: 5px; }
+.status-legend i,.chart-legend i { width: 7px; height: 7px; border-radius: 2px; }
+.legend-running { background: #24b885; }
+.legend-idle { background: #f1b64f; }
+.legend-down { background: #eb6a73; }
+.legend-unknown { background: #c4ccd7; }
+.machine-matrix { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 7px; }
+.machine-tile { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 5px; padding: 9px 8px; border: 1px solid #e6ebf1; border-radius: 6px; text-align: left; }
+.machine-tile strong { color: #34445a; font-size: 10px; }
+.machine-tile small { overflow: hidden; width: 100%; color: #8995a6; font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }
+.machine-indicator { width: 7px; height: 7px; border-radius: 50%; }
+.machine-running { background: #f0fbf6; border-color: #c9efdf; }
+.machine-running .machine-indicator { background: #20b881; box-shadow: 0 0 0 3px #20b88120; }
+.machine-unknown { background: #fafbfd; }
+.machine-unknown .machine-indicator { background: #bdc7d4; }
+.panel-footnote { margin-top: 13px; padding-top: 10px; border-top: 1px solid #edf0f5; color: #929eaf; font-size: 9px; line-height: 1.5; }
+.chart-summary { display: flex; gap: 25px; margin: 2px 0 15px; }
+.chart-summary div { display: flex; flex-direction: column; gap: 5px; }
+.chart-summary span { color: #929db0; font-size: 9px; }
+.chart-summary strong { color: #4a5870; font-size: 10px; }
+.bar-chart { display: flex; align-items: stretch; gap: 7px; height: 200px; padding: 12px 0 0; border-bottom: 1px solid #e8edf4; }
+.bar-column { display: flex; flex: 1; min-width: 0; flex-direction: column; align-items: center; gap: 6px; }
+.bar-value { color: #8190a5; font-size: 8px; }
+.bar-track { display: flex; align-items: flex-end; justify-content: center; width: 100%; flex: 1; background: linear-gradient(to bottom,#f7f9fc,#fbfcfe); border-radius: 4px 4px 0 0; }
+.bar-fill { width: 66%; min-height: 3px; border-radius: 4px 4px 0 0; background: linear-gradient(180deg,#5d9bfa,#3474e3); }
+.bar-label { color: #8b97aa; font-size: 8px; white-space: nowrap; writing-mode: vertical-rl; transform: rotate(180deg); height: 29px; }
+.chart-legend { display: flex; align-items: center; gap: 7px; margin-top: 15px; color: #8491a5; font-size: 9px; }
+.chart-legend i { background: #4a88ee; }
+
+.machine-table-panel,.graph-panel,.maintenance-panel { margin-top: 17px; }
+.table-search { width: 155px; padding: 8px 10px; border: 1px solid #e1e7f0; border-radius: 6px; font-size: 10px; }
+.table-scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; text-align: left; white-space: nowrap; }
+thead { background: #f7f9fc; }
+th { padding: 12px 13px; color: #8290a4; font-size: 9px; font-weight: 700; }
+td { padding: 13px; border-bottom: 1px solid #edf1f6; color: #5b6980; font-size: 10px; }
+td strong { color: #34445a; }
+tbody tr:last-child td { border-bottom: 0; }
+.cell-chip { display: inline-grid; place-items: center; width: 23px; height: 23px; color: #3475d6; background: #eaf2ff; border-radius: 6px; font-weight: 700; }
+.status-pill { display: inline-flex; align-items: center; gap: 6px; padding: 5px 8px; border-radius: 5px; font-size: 9px; }
+.status-pill i { width: 6px; height: 6px; border-radius: 50%; }
+.pill-running { color: #16845f; background: #e8f8f1; }
+.pill-running i { background: #22b781; }
+.pill-unknown { color: #748195; background: #f0f2f6; }
+.pill-unknown i { background: #aab4c2; }
+.text-button { border: 0; padding: 0; background: none; color: #3378e0; font-size: 9px; font-weight: 600; }
+.empty-state { padding: 25px; color: #8b97a9; text-align: center; white-space: normal; }
+
+.graph-tabs { display: flex; flex-wrap: wrap; gap: 7px; padding-bottom: 14px; border-bottom: 1px solid #edf0f5; }
+.graph-tab { padding: 8px 11px; color: #738198; background: #f7f9fc; border: 1px solid #e7ecf3; border-radius: 5px; font-size: 9px; }
+.graph-tab.active { color: #fff; background: #286bda; border-color: #286bda; }
+.graph-placeholder { display: flex; min-height: 170px; flex-direction: column; align-items: center; justify-content: center; color: #8290a5; text-align: center; }
+.graph-placeholder-icon { display: grid; place-items: center; width: 40px; height: 40px; margin-bottom: 10px; color: #3478e5; background: #eaf2ff; border-radius: 10px; font-size: 20px; }
+.graph-placeholder strong { color: #44536a; font-size: 12px; }
+.graph-placeholder p { margin: 7px 0 0; font-size: 10px; }
+
+.secondary-button { padding: 8px 11px; color: #3576d8; background: #fff; border: 1px solid #dce7f8; border-radius: 6px; font-size: 9px; }
+.maintenance-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 12px; }
+.maintenance-card { display: flex; align-items: center; gap: 10px; padding: 13px; border: 1px solid #e8edf4; border-radius: 7px; }
+.maintenance-icon { display: grid; place-items: center; width: 34px; height: 34px; flex-shrink: 0; border-radius: 8px; font-size: 16px; }
+.maintenance-icon.blue { color: #3577dc; background: #eaf2ff; }
+.maintenance-icon.orange { color: #db8a36; background: #fff1df; }
+.maintenance-icon.purple { color: #8a60d9; background: #f1eaff; }
+.maintenance-card div { flex: 1; min-width: 0; }
+.maintenance-card strong { display: block; color: #435169; font-size: 10px; }
+.maintenance-card small { display: block; margin-top: 5px; color: #8b97a8; font-size: 8px; }
+.maintenance-card > span:last-child { color: #98a4b5; }
+.footer { display: flex; justify-content: space-between; gap: 12px; margin-top: 20px; padding: 15px 0 5px; color: #97a2b2; font-size: 9px; }
+
+@media (min-width: 1500px) {
+  .page-content { padding-left: 36px; padding-right: 36px; }
+  .cell-grid { grid-template-columns: repeat(5,minmax(0,1fr)); }
+}
+@media (max-width: 1200px) {
+  .sidebar { width: 215px; }
+  .main-content { margin-left: 215px; }
+  .page-content { padding: 22px 18px; }
+  .topbar { padding: 0 18px; }
+  .cell-grid { grid-template-columns: repeat(3,minmax(0,1fr)); }
+  .kpi-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .two-column { grid-template-columns: 1fr; }
+}
+@media (max-width: 760px) {
+  .sidebar { position: relative; width: 100%; height: auto; }
+  .sidebar-nav { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .nav-group { margin-bottom: 5px; }
+  .sidebar-bottom { display: none; }
+  .main-content { margin-left: 0; }
+  .topbar { padding: 0 13px; }
+  .topbar-right { gap: 8px; }
+  .connection-label { display: none; }
+  .page-content { padding: 17px 12px; }
+  .page-title-row { align-items: flex-start; flex-direction: column; }
+  .page-filters { flex-wrap: wrap; width: 100%; }
+  .filter-box { flex: 1; min-width: 125px; }
+  .filter-box input,.filter-box select { width: 100%; min-width: 0; }
+  .kpi-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 9px; }
+  .cell-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .maintenance-grid { grid-template-columns: 1fr; }
+  .machine-matrix { grid-template-columns: repeat(3,minmax(0,1fr)); }
+  .section-heading { align-items: flex-start; }
+  .shift-right { display: none; }
+  .footer { flex-direction: column; }
+}
+@media print {
+  .sidebar { display: none; }
+  .main-content { margin-left: 0; }
+  .topbar { display: none; }
+  body { background: #fff; }
+  .panel,.kpi-card,.cell-card { break-inside: avoid; }
+}
+
+/* FORCE RED INDUSTRIAL BACKGROUND */
+html,
+body,
+#root,
+.app-shell,
+.main-content,
+.page-content {
+  background-color: #780000 !important;
+}
+
+.app-shell {
+  background-image: linear-gradient(135deg, #650000, #980000 55%, #590000) !important;
+}
+
+.sidebar {
+  background: #350000 !important;
+}
+
+.topbar {
+  background: #700000 !important;
+  border-color: #a52222 !important;
+}
+
+.kpi-card,
+.cell-card,
+.panel {
+  background: #710707 !important;
+  border-color: #c32222 !important;
+}
+
+.section-heading h2,
+h1 {
+  color: #ffffff !important;
+}
+
+.cell-card.selected {
+  background: #910d0d !important;
+  border-color: #ff5555 !important;
+}
+
+/* ===== FIX FAINT TEXT ON RED DASHBOARD ===== */
+
+/* Make primary text clearly visible */
+.page-content,
+.page-content h1,
+.page-content h2,
+.page-content h3,
+.page-content strong,
+.page-content td,
+.page-content th {
+  color: #ffffff !important;
+}
+
+/* Cell names, numbers and descriptions */
+.cell-name,
+.cell-metrics strong,
+.cell-metrics span,
+.cell-footer,
+.cell-letter,
+.cell-status {
+  color: #ffffff !important;
+}
+
+/* KPI cards */
+.kpi-label,
+.kpi-value,
+.kpi-bottom {
+  color: #ffffff !important;
+}
+
+/* Make subtitles readable without overpowering headings */
+.page-subtitle,
+.section-heading p,
+.cell-metrics span,
+.cell-footer,
+.panel-footnote,
+.chart-summary span,
+.chart-legend {
+  color: #ffdada !important;
+}
+
+/* Ensure reserved cell labels are readable */
+.cell-status.status-muted {
+  color: #ffd0d0 !important;
+}
+
+/* Keep status colors visible */
+.machine-running strong,
+.pill-running {
+  color: #ffffff !important;
+}
+
+.status-legend span {
+  color: #ffe6e6 !important;
+}
+
+/* Prevent pale progress bars on the red background */
+.cell-progress,
+.bar-track {
+  background: #420000 !important;
+}
+
+.cell-progress span {
+  background: #42a5ff !important;
+}
+
+/* Table and search controls */
+.table-search {
+  color: #ffffff !important;
+  background: #510000 !important;
+}
+
+.table-search::placeholder {
+  color: #ffdada !important;
+}
+
+.text-button {
+  color: #8fc4ff !important;
+}
+
+/* Buttons and labels */
+.cell-card,
+.machine-tile,
+.graph-tab {
+  color: #ffffff !important;
+}
+
+.cell-card.selected {
+  background: #900c0c !important;
+}
+
+/* Fix small status labels */
+.cell-status,
+.demo-tag {
+  font-weight: 700;
+  text-shadow: none;
+}
+
+/* ===== FIX MACHINE STATUS BADGE VISIBILITY ===== */
+
+/* Running status in the machine details table */
+.status-pill.pill-running {
+  color: #075c39 !important;
+  background: #baf5d5 !important;
+  border: 1px solid #45d69a !important;
+  font-weight: 700 !important;
+}
+
+.status-pill.pill-running i {
+  background: #07844f !important;
+}
+
+/* Not configured status */
+.status-pill.pill-unknown {
+  color: #303b4b !important;
+  background: #e4e9f0 !important;
+  border: 1px solid #b9c3d0 !important;
+  font-weight: 700 !important;
+}
+
+.status-pill.pill-unknown i {
+  background: #68788d !important;
+}
+
+/* Machine status tiles */
+.machine-tile.machine-running strong,
+.machine-tile.machine-running small {
+  color: #ffffff !important;
+}
+
+.machine-tile.machine-unknown strong {
+  color: #ffffff !important;
+}
+
+.machine-tile.machine-unknown small {
+  color: #ffdada !important;
+}
+
+/* Legend labels */
+.status-legend span {
+  color: #ffffff !important;
+}
+
+/* Make status badges readable in the table */
+td .status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 10px;
+  border-radius: 5px;
+  font-size: 10px;
+  line-height: 1.3;
+}
+
+/* ===== FIX MACHINE STATUS TILE TEXT ===== */
+
+/* Connected machine tile */
+.machine-tile.machine-running {
+  background: #14532d !important;
+  border: 1px solid #22c55e !important;
+}
+
+.machine-tile.machine-running strong,
+.machine-tile.machine-running small {
+  color: #ffffff !important;
+}
+
+/* Unconfigured machine tiles */
+.machine-tile.machine-unknown {
+  background: #fff1f1 !important;
+  border: 1px solid #d99a9a !important;
+}
+
+.machine-tile.machine-unknown strong {
+  color: #7f1111 !important;
+}
+
+.machine-tile.machine-unknown small {
+  color: #8f3030 !important;
+}
+
+/* Status indicators */
+.machine-running .machine-indicator {
+  background: #4ade80 !important;
+}
+
+.machine-unknown .machine-indicator {
+  background: #8b9bb0 !important;
+}
+
+/* Keep the legend readable on the red panel */
+.status-legend span {
+  color: #ffffff !important;
+}
+
+/* Make machine labels easier to read */
+.machine-tile strong {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+}
+
+.machine-tile small {
+  font-size: 9px !important;
+}
+
+/* ===== FIX GRAPH ANALYSIS VISIBILITY ===== */
+
+/* All graph tabs */
+.graph-tabs .graph-tab {
+  color: #ffffff !important;
+  background: #570000 !important;
+  border: 1px solid #e04444 !important;
+  font-weight: 600 !important;
+}
+
+/* Selected graph tab */
+.graph-tabs .graph-tab.active {
+  color: #ffffff !important;
+  background: #f32323 !important;
+  border-color: #ff6969 !important;
+}
+
+/* Hover effect */
+.graph-tabs .graph-tab:hover {
+  color: #ffffff !important;
+  background: #a10d0d !important;
+}
+
+/* Graph panel heading and description */
+.graph-panel .section-heading h2 {
+  color: #ffffff !important;
+}
+
+.graph-panel .section-heading p {
+  color: #ffdada !important;
+}
+
+/* Graph placeholder area */
+.graph-panel .graph-placeholder {
+  color: #ffdada !important;
+  background: #640000 !important;
+  border: 1px solid #b82a2a !important;
+}
+
+/* Placeholder icon */
+.graph-panel .graph-placeholder-icon {
+  color: #ffffff !important;
+  background: #a91b1b !important;
+}
+
+/* Placeholder title and message */
+.graph-panel .graph-placeholder strong {
+  color: #ffffff !important;
+}
+
+.graph-panel .graph-placeholder p {
+  color: #ffdada !important;
+}
+
+/* Preview label */
+.graph-panel .section-action,
+.graph-panel .muted-small {
+  color: #ffdada !important;
+}
+
+/* ===== MACHINE DETAILS TABLE: READABLE TEXT ===== */
+
+/* Table header background and text */
+.machine-table-panel thead {
+  background: #520000 !important;
+}
+
+.machine-table-panel thead th {
+  color: #ffffff !important;
+  background: #520000 !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  padding: 13px 12px !important;
+}
+
+/* Table body text */
+.machine-table-panel tbody td {
+  color: #ffffff !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  background: #760707 !important;
+  border-bottom: 1px solid #c33737 !important;
+  padding: 14px 12px !important;
+}
+
+/* Machine names and values */
+.machine-table-panel tbody td strong {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+}
+
+/* Cell letter badge */
+.machine-table-panel .cell-chip {
+  color: #1457b5 !important;
+  background: #e5efff !important;
+  font-weight: 800 !important;
+}
+
+/* Status badges */
+.machine-table-panel .status-pill.pill-running {
+  color: #075c39 !important;
+  background: #baf5d5 !important;
+  font-weight: 700 !important;
+}
+
+.machine-table-panel .status-pill.pill-unknown {
+  color: #303b4b !important;
+  background: #e4e9f0 !important;
+  font-weight: 700 !important;
+}
+
+/* View details link */
+.machine-table-panel .text-button {
+  color: #8fc4ff !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+}
+
+/* Search box */
+.machine-table-panel .table-search {
+  color: #ffffff !important;
+  background: #520000 !important;
+  border: 1px solid #ff6565 !important;
+}
+
+.machine-table-panel .table-search::placeholder {
+  color: #ffdada !important;
+}
+
+/* Table row hover */
+.machine-table-panel tbody tr:hover td {
+  background: #8c1010 !important;
+}
+
+/* =========================================================
+   OEE MONITOR — READABILITY FIX
+   Deep Navy Blue | Light Mode | Blue Accent
+   Append at the VERY BOTTOM of App.css
+   ========================================================= */
+
+/* 1. Global text size and readability */
+body {
+  font-size: 14px !important;
+  color: #0f172a !important;
+  line-height: 1.5;
+}
+
+button,
+input,
+select,
+textarea {
+  font-size: 13px;
+}
+
+p {
+  line-height: 1.55;
+}
+
+/* 2. Fix white headings that disappear on light backgrounds */
+.page-title,
+.page-title h1,
+.page-title-row h1,
+h1.page-title,
+.dashboard-title,
+.page-heading h1 {
+  color: #0b1f33 !important;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  color: #0f172a;
+}
+
+/* Section headings */
+.section-title,
+.section-heading,
+.section-header h2,
+.panel-title,
+.panel-heading h2,
+.section-title h2 {
+  color: #16324f !important;
+}
+
+/* 3. Main dashboard headings and descriptions */
+.page-subtitle,
+.section-subtitle,
+.panel-subtitle,
+.subtitle,
+.description {
+  color: #475569 !important;
+}
+
+/* 4. Production day banner */
+.shift-banner,
+.shift-banner * {
+  color: #16324f !important;
+}
+
+.shift-banner .muted-small,
+.shift-banner p {
+  color: #334155 !important;
+}
+
+/* 5. KPI cards */
+.kpi-card {
+  background: #ffffff !important;
+  color: #0f172a !important;
+}
+
+.kpi-label,
+.kpi-title {
+  color: #334155 !important;
+  font-size: 13px !important;
+}
+
+.kpi-value {
+  color: #0b1f33 !important;
+  font-size: 27px !important;
+  font-weight: 800 !important;
+}
+
+.kpi-bottom,
+.kpi-detail,
+.kpi-card p {
+  color: #475569 !important;
+  font-size: 12px !important;
+}
+
+/* 6. Production cell headings and values */
+.cell-card,
+.cell-chip {
+  color: #0f172a !important;
+}
+
+.cell-card h3,
+.cell-card h4,
+.cell-card .cell-name,
+.cell-name {
+  color: #16324f !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+}
+
+.cell-card .cell-value,
+.cell-card .cell-metrics strong,
+.cell-metrics strong {
+  color: #0b1f33 !important;
+  font-size: 17px !important;
+  font-weight: 800 !important;
+}
+
+/* Fix pale pink or white labels */
+.cell-card .muted-small,
+.cell-card .cell-footer,
+.cell-card p,
+.cell-card small,
+.cell-card .cell-status {
+  color: #475569 !important;
+  font-size: 11px !important;
+}
+
+/* Keep cell status visible */
+.cell-card .cell-status,
+.cell-card .status-label {
+  font-weight: 600 !important;
+}
+
+/* 7. Production cell cards: remove leftover red background */
+.cell-card,
+.cell-chip {
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+}
+
+/* Selected cell */
+.cell-card.selected,
+.cell-card.active,
+.cell-chip.selected,
+.cell-chip.active {
+  background: #eaf2ff !important;
+  border: 2px solid #2563eb !important;
+  color: #0b1f33 !important;
+}
+
+/* Selected cell text */
+.cell-card.selected *,
+.cell-card.active *,
+.cell-chip.selected *,
+.cell-chip.active * {
+  color: #16324f !important;
+}
+
+/* 8. Machine availability tiles */
+.machine-tile,
+.machine-card,
+.machine-status-card {
+  font-size: 13px !important;
+}
+
+.machine-tile strong,
+.machine-card strong,
+.machine-status-card strong {
+  font-size: 14px !important;
+}
+
+/* Unconfigured machine: readable warning style */
+.machine-tile.unconfigured,
+.machine-card.unconfigured,
+.machine-status-card.unconfigured {
+  background: #fff1f2 !important;
+  color: #991b1b !important;
+  border-color: #fda4af !important;
+}
+
+.machine-tile.unconfigured *,
+.machine-card.unconfigured *,
+.machine-status-card.unconfigured * {
+  color: #991b1b !important;
+}
+
+/* Configured/running machine */
+.machine-tile.running,
+.machine-card.running,
+.machine-status-card.running {
+  background: #dcfce7 !important;
+  border-color: #86efac !important;
+  color: #166534 !important;
+}
+
+/* 9. Graph Analysis text */
+.graph-panel,
+.graph-panel * {
+  color: inherit;
+}
+
+.graph-panel h2,
+.graph-panel h3 {
+  color: #16324f !important;
+}
+
+.graph-panel p,
+.graph-panel .muted-small {
+  color: #475569 !important;
+}
+
+.graph-tab {
+  color: #334155 !important;
+  font-size: 13px !important;
+}
+
+.graph-tab.active {
+  color: #1d4ed8 !important;
+  font-weight: 700 !important;
+}
+
+/* 10. Chart labels and values */
+.bar-value,
+.chart-value {
+  color: #16324f !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+}
+
+.bar-label,
+.chart-label,
+.chart-axis-label {
+  color: #475569 !important;
+  font-size: 11px !important;
+}
+
+/* Production chart legend */
+.chart-legend,
+.chart-legend span {
+  color: #475569 !important;
+  font-size: 12px !important;
+}
+
+/* 11. Table headings and rows */
+table th {
+  color: #16324f !important;
+  background: #eaf2ff !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+}
+
+table td {
+  color: #334155 !important;
+  font-size: 12px !important;
+}
+
+/* 12. Small labels, badges and status text */
+.muted-small,
+.panel-footnote,
+.footer,
+.status-label {
+  color: #475569 !important;
+}
+
+.demo-tag,
+.badge {
+  color: #1d4ed8 !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+}
+
+/* Keep warning and error messages visible */
+.error,
+.error-message,
+.text-danger {
+  color: #b91c1c !important;
+}
+
+.warning,
+.warning-message,
+.text-warning {
+  color: #92400e !important;
+}
+
+/* 13. Input labels */
+label,
+.filter-box label,
+.filter-box span {
+  color: #334155 !important;
+  font-size: 12px !important;
+  font-weight: 500;
+}
+
+input,
+select,
+textarea {
+  color: #0f172a !important;
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #64748b !important;
+  opacity: 1;
+}
+
+/* 14. Sidebar: keep its dark theme */
+.sidebar,
+.sidebar * {
+  color: #e2e8f0;
+}
+
+.sidebar .nav-group-title {
+  color: #a8bfd6 !important;
+  font-size: 11px !important;
+}
+
+.sidebar .active,
+.sidebar .active * {
+  color: #ffffff !important;
+}
+
+/* 15. Improve legibility without enlarging the layout excessively */
+@media (max-width: 768px) {
+  body {
+    font-size: 13px !important;
+  }
+
+  .kpi-value {
+    font-size: 23px !important;
+  }
+
+  .cell-card .cell-value,
+  .cell-metrics strong {
+    font-size: 15px !important;
+  }
+}
+
+/* ===== FINAL OEE LIGHT THEME OVERRIDE ===== */
+
+/* Main page */
+html,
+body,
+#root {
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+.app-shell,
+.main-content,
+.page-content,
+.dashboard-content,
+main {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+/* Header */
+.topbar,
+header.topbar {
+  background: #ffffff !important;
+  color: #16324f !important;
+  border-bottom: 1px solid #dbe3ed !important;
+}
+
+.breadcrumb,
+.breadcrumb *,
+.topbar * {
+  color: #334155;
+}
+
+/* Main dashboard heading */
+h1,
+.page-title,
+.page-title-row h1,
+.dashboard-title {
+  color: #0b1f33 !important;
+}
+
+.page-subtitle,
+.section-subtitle,
+.description {
+  color: #475569 !important;
+}
+
+/* Section titles */
+.section-title,
+.section-title *,
+.section-heading,
+.section-heading *,
+.panel-title,
+.panel-heading {
+  color: #16324f !important;
+}
+
+/* Production cells */
+.cell-card,
+.cell-chip {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #cbd5e1 !important;
+}
+
+.cell-card *,
+.cell-chip * {
+  color: #334155;
+}
+
+.cell-card h3,
+.cell-card h4,
+.cell-card .cell-name,
+.cell-chip strong {
+  color: #16324f !important;
+  font-size: 14px !important;
+}
+
+.cell-card p,
+.cell-card small,
+.cell-card .cell-footer,
+.cell-card .muted-small {
+  color: #475569 !important;
+}
+
+/* Selected production cell */
+.cell-card.selected,
+.cell-card.active,
+.cell-chip.selected,
+.cell-chip.active {
+  background: #eaf2ff !important;
+  border: 2px solid #2563eb !important;
+}
+
+.cell-card.selected *,
+.cell-card.active *,
+.cell-chip.selected *,
+.cell-chip.active * {
+  color: #16324f !important;
+}
+
+/* KPI cards */
+.kpi-card {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #dbe3ed !important;
+}
+
+.kpi-card .kpi-label,
+.kpi-card .kpi-title {
+  color: #334155 !important;
+  font-size: 13px !important;
+}
+
+.kpi-card .kpi-value {
+  color: #0b1f33 !important;
+  font-size: 27px !important;
+}
+
+.kpi-card p,
+.kpi-card .kpi-detail,
+.kpi-card .kpi-bottom {
+  color: #475569 !important;
+}
+
+/* Production day banner */
+.shift-banner {
+  background: #eaf2ff !important;
+  border: 1px solid #bfdbfe !important;
+}
+
+.shift-banner * {
+  color: #16324f !important;
+}
+
+/* Graph panels */
+.panel {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #dbe3ed !important;
+}
+
+.panel h2,
+.panel h3,
+.panel .section-heading {
+  color: #16324f !important;
+}
+
+.panel p,
+.panel .muted-small,
+.panel-footnote {
+  color: #475569 !important;
+}
+
+/* Chart labels */
+.bar-value,
+.chart-value {
+  color: #16324f !important;
+}
+
+.bar-label,
+.chart-label,
+.chart-legend {
+  color: #475569 !important;
+}
+
+/* Form controls */
+input,
+select,
+textarea {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #cbd5e1 !important;
+}
+
+label,
+.filter-box span {
+  color: #334155 !important;
+}
+
+/* Buttons */
+.primary-button {
+  background: #2563eb !important;
+  color: #ffffff !important;
+  border-color: #2563eb !important;
+}
+
+/* Keep the sidebar navy */
+.sidebar {
+  background: #0b1f33 !important;
+  color: #f8fafc !important;
+}
+
+.sidebar .active,
+.sidebar .active * {
+  background-color: #1d4ed8 !important;
+  color: #ffffff !important;
+}
+
+/* Readable table */
+table {
+  background: #ffffff !important;
+}
+
+table th {
+  background: #eaf2ff !important;
+  color: #16324f !important;
+}
+
+table td {
+  color: #334155 !important;
+}
+
+/* Slightly larger small text */
+.muted-small,
+.panel-footnote,
+.cell-footer,
+.bar-label {
+  font-size: 11px !important;
+  line-height: 1.5;
+}
+
+/* ===== OEE MONITOR: FINAL TEXT VISIBILITY FIX ===== */
+
+/* Main section headings */
+.section-title,
+.section-title *,
+.section-heading,
+.section-heading *,
+.section-header,
+.section-header *,
+.panel-title,
+.panel-title *,
+.panel-heading,
+.panel-heading * {
+  color: #16324f !important;
+}
+
+/* Plant Performance Overview and Production Cells */
+h2,
+h3,
+h4,
+.section-title h2,
+.section-title h3 {
+  color: #16324f !important;
+}
+
+/* Fix pale pink subtitles and descriptions */
+.page-subtitle,
+.section-subtitle,
+.subtitle,
+.description,
+.section-description,
+.panel-subtitle,
+.panel-description,
+.section-header p,
+.panel-heading p {
+  color: #475569 !important;
+}
+
+/* Production day banner */
+.shift-banner,
+.shift-banner p,
+.shift-banner span,
+.shift-banner strong,
+.shift-banner div {
+  color: #16324f !important;
+}
+
+.shift-banner .muted-small {
+  color: #334155 !important;
+}
+
+/* KPI card headings and explanatory text */
+.kpi-card,
+.kpi-card * {
+  color: #0f172a;
+}
+
+.kpi-card .kpi-label,
+.kpi-card .kpi-title,
+.kpi-card strong {
+  color: #16324f !important;
+}
+
+.kpi-card .kpi-value {
+  color: #0b1f33 !important;
+  font-size: 27px !important;
+  font-weight: 800 !important;
+}
+
+.kpi-card p,
+.kpi-card .kpi-detail,
+.kpi-card .kpi-bottom,
+.kpi-card small {
+  color: #475569 !important;
+}
+
+/* Fix pale pink text inside production cells */
+.cell-card p,
+.cell-card small,
+.cell-card span,
+.cell-card .muted-small,
+.cell-card .cell-footer,
+.cell-card .cell-status,
+.cell-chip p,
+.cell-chip small {
+  color: #475569 !important;
+}
+
+/* Production cell names */
+.cell-card h3,
+.cell-card h4,
+.cell-card .cell-name,
+.cell-chip strong {
+  color: #16324f !important;
+}
+
+/* Selected production cell */
+.cell-card.selected,
+.cell-card.active,
+.cell-chip.selected,
+.cell-chip.active {
+  background: #eaf2ff !important;
+  border-color: #2563eb !important;
+}
+
+/* Do not turn selected cell text white */
+.cell-card.selected *,
+.cell-card.active *,
+.cell-chip.selected *,
+.cell-chip.active * {
+  color: #16324f !important;
+}
+
+/* Preview and demo labels */
+.demo-tag,
+.demo-values,
+.preview-label,
+.ui-preview,
+.cell-card .preview-label {
+  color: #1d4ed8 !important;
+}
+
+/* All muted labels on light surfaces */
+.panel .muted-small,
+.panel-footnote,
+.graph-placeholder p,
+.graph-panel p,
+.graph-panel .muted-small {
+  color: #475569 !important;
+}
+
+/* Ensure table and chart labels stay readable */
+.bar-label,
+.bar-value,
+.chart-label,
+.chart-value,
+.chart-legend {
+  color: #334155 !important;
+}
+
+/* Prevent browser text selection from looking like permanent blue blocks */
+::selection {
+  background: #bfdbfe;
+  color: #0b1f33;
+}
+
+/* Slightly larger supporting text */
+.section-subtitle,
+.section-description,
+.kpi-card p,
+.cell-card p,
+.panel-footnote {
+  font-size: 12px !important;
+  line-height: 1.5;
+}
+
+/* ===== TARGETED FIX: PLANT PERFORMANCE OVERVIEW ===== */
+
+/* Fix white section heading */
+h2,
+h3 {
+  color: #16324f !important;
+}
+
+.section-title,
+.section-title h2,
+.section-title h3,
+.section-title .title,
+.section-heading,
+.section-heading h2,
+.section-heading h3 {
+  color: #16324f !important;
+}
+
+/* Fix pale pink section subtitle */
+.section-title p,
+.section-title small,
+.section-title span,
+.section-subtitle,
+.section-description,
+.section-header p,
+.section-header small,
+.panel-subtitle {
+  color: #475569 !important;
+}
+
+/* Fix text in the Plant Performance Overview area */
+.plant-performance-overview,
+.plant-performance-overview *,
+.performance-overview,
+.performance-overview * {
+  color: #16324f !important;
+}
+
+/* Production day banner */
+.shift-banner,
+.shift-banner * {
+  color: #16324f !important;
+}
+
+.shift-banner p,
+.shift-banner small {
+  color: #334155 !important;
+}
+
+/* KPI card text */
+.kpi-card .kpi-label,
+.kpi-card .kpi-title {
+  color: #16324f !important;
+}
+
+.kpi-card .kpi-value {
+  color: #0b1f33 !important;
+}
+
+.kpi-card p,
+.kpi-card small,
+.kpi-card .kpi-detail {
+  color: #475569 !important;
+}
+
+/* ===== GRAPH ANALYSIS: NAVY BLUE LIGHT THEME ===== */
+
+/* Graph panel */
+.graph-panel {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #dbe3ed !important;
+}
+
+/* Graph panel subtitle and metadata */
+.graph-panel .section-subtitle,
+.graph-panel .muted-small,
+.graph-panel p,
+.graph-panel .graph-placeholder p {
+  color: #475569 !important;
+}
+
+/* Graph tabs — all inactive tabs */
+.graph-panel .graph-tab {
+  background: #eaf2ff !important;
+  color: #16324f !important;
+  border: 1px solid #bfdbfe !important;
+  border-radius: 6px !important;
+}
+
+/* Selected graph tab */
+.graph-panel .graph-tab.active {
+  background: #2563eb !important;
+  color: #ffffff !important;
+  border-color: #2563eb !important;
+}
+
+/* Tab hover */
+.graph-panel .graph-tab:hover {
+  background: #dbeafe !important;
+  color: #1d4ed8 !important;
+}
+
+/* Graph metadata labels */
+.graph-panel .chart-summary,
+.graph-panel .chart-legend,
+.graph-panel .bar-label,
+.graph-panel .bar-value,
+.graph-panel .chart-label,
+.graph-panel .chart-value {
+  color: #334155 !important;
+}
+
+/* Chart background */
+.graph-panel .bar-chart,
+.graph-panel .chart-container {
+  background: #ffffff !important;
+}
+
+/* Bar tracks */
+.graph-panel .bar-track {
+  background: #e2e8f0 !important;
+}
+
+/* Actual production bars */
+.graph-panel .bar-fill {
+  background: linear-gradient(
+    180deg,
+    #60a5fa 0%,
+    #2563eb 100%
+  ) !important;
+}
+
+/* If chart bars are rendered as direct column elements */
+.graph-panel .bar-column {
+  background: transparent !important;
+  color: #334155 !important;
+}
+
+.graph-panel .bar-column .bar-track,
+.graph-panel .bar-column .bar-background {
+  background: #e2e8f0 !important;
+}
+
+/* Graph footer and filter explanation */
+.graph-panel .panel-footnote,
+.graph-panel .graph-footer,
+.graph-panel .chart-caption {
+  color: #475569 !important;
+  border-color: #dbe3ed !important;
+}
+
+/* Fix pale pink labels inside the graph */
+.graph-panel span,
+.graph-panel label {
+  color: #334155;
+}
+
+/* Preserve selected tab contrast */
+.graph-panel .graph-tab.active,
+.graph-panel .graph-tab.active * {
+  color: #ffffff !important;
+}
+
+/* ==================================================
+   OEE MONITOR — GRAPH ANALYSIS TEXT VISIBILITY FIX
+   Theme: Deep Navy Blue | Light Mode | Blue Accent
+   ================================================== */
+
+/* Graph panel base text */
+.graph-panel,
+.graph-panel * {
+  color: #16324f;
+}
+
+/* Section heading and subtitle */
+.graph-panel .section-heading h2,
+.graph-panel .section-heading h3,
+.graph-panel .section-heading strong {
+  color: #102a43 !important;
+}
+
+.graph-panel .section-heading p,
+.graph-panel .section-heading small {
+  color: #475569 !important;
+}
+
+/* Production date and machine code labels */
+.graph-panel .plan-actual-filters label,
+.graph-panel .plan-actual-filters label span,
+.graph-panel .filter-box,
+.graph-panel .filter-box span {
+  color: #334155 !important;
+  font-size: 14px !important;
+  font-weight: 500;
+}
+
+/* Date and machine input fields */
+.graph-panel .plan-actual-filters input,
+.graph-panel .plan-actual-filters select {
+  color: #102a43 !important;
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  font-size: 14px !important;
+}
+
+/* Summary labels: date, machine, hourly records */
+.graph-panel .chart-summary span {
+  color: #475569 !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+}
+
+/* Summary values */
+.graph-panel .chart-summary strong {
+  color: #102a43 !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+}
+
+/* Planned and actual bar labels */
+.graph-panel .plan-actual-graph > div > div > strong,
+.graph-panel .plan-actual-graph > div > div > span {
+  color: #16324f !important;
+  font-size: 14px !important;
+}
+
+/* Graph information and warning messages */
+.graph-panel .panel-footnote,
+.graph-panel .empty-state,
+.graph-panel .graph-placeholder p {
+  color: #475569 !important;
+  font-size: 13px !important;
+  line-height: 1.6;
+}
+
+/* Graph tabs */
+.graph-panel .graph-tab {
+  color: #16324f !important;
+  background: #eff6ff !important;
+  border-color: #bfdbfe !important;
+  font-size: 14px !important;
+}
+
+.graph-panel .graph-tab.active {
+  color: #ffffff !important;
+  background: #2563eb !important;
+  border-color: #2563eb !important;
+}
+
+/* Comparison bars */
+.graph-panel .plan-actual-graph {
+  color: #16324f !important;
+}
+
+.graph-panel .plan-actual-graph strong,
+.graph-panel .plan-actual-graph span {
+  color: #16324f;
+}
+
+/* Database status badge */
+.graph-panel .live-label,
+.graph-panel .live-label span {
+  color: #166534 !important;
+}
+
+/* Buttons */
+.graph-panel button.primary-button {
+  color: #ffffff !important;
+  background: #2563eb !important;
+  font-size: 14px !important;
+  font-weight: 600;
+}
+
+/* Consistent readable font size */
+.graph-panel {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* ===== HOURLY RUNNING TIME TABLE: VISIBILITY FIX ===== */
+
+.graph-panel .table-scroll {
+  overflow-x: auto;
+  background: #ffffff !important;
+}
+
+/* Table base */
+.graph-panel .table-scroll table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #ffffff !important;
+  color: #16324f !important;
+}
+
+/* Header cells: dark text on light blue */
+.graph-panel .table-scroll table thead th {
+  background: #eaf2ff !important;
+  color: #16324f !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  padding: 12px 14px !important;
+  text-align: left;
+  white-space: nowrap;
+}
+
+/* All table body cells */
+.graph-panel .table-scroll table tbody td {
+  background: #ffffff !important;
+  color: #334155 !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  padding: 14px !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  vertical-align: middle;
+}
+
+/* Production hour */
+.graph-panel .table-scroll table tbody td:first-child,
+.graph-panel .table-scroll table tbody td:first-child strong {
+  color: #16324f !important;
+  font-weight: 700 !important;
+}
+
+/* Running time */
+.graph-panel .table-scroll table tbody td strong {
+  color: #16324f !important;
+}
+
+/* Hours and minutes, e.g. (0h 45m) */
+.graph-panel .table-scroll table tbody td div {
+  color: #475569 !important;
+  font-size: 13px !important;
+}
+
+/* Production and downtime values */
+.graph-panel .table-scroll table tbody td:nth-child(4),
+.graph-panel .table-scroll table tbody td:nth-child(5) {
+  color: #16324f !important;
+  font-weight: 600 !important;
+}
+
+/* Keep empty-state messages readable */
+.graph-panel .table-scroll .empty-state {
+  color: #475569 !important;
+  background: #ffffff !important;
+}
+
+/* Preserve the blue/green/orange achievement bars */
+.graph-panel .table-scroll table tbody td div[style*="border-radius"] {
+  border-radius: 6px;
+}
+
+/* ===== PRODUCTION PLAN TEXT VISIBILITY FIX ===== */
+
+.production-plan-panel {
+  color: #16324f !important;
+}
+
+/* Headings and descriptions */
+.production-plan-panel h2,
+.production-plan-panel h3,
+.production-plan-panel h4,
+.production-plan-panel p,
+.production-plan-panel label {
+  color: #16324f !important;
+  font-size: 14px;
+}
+
+/* Table */
+.production-plan-panel table {
+  width: 100%;
+  background: #ffffff !important;
+  border-collapse: collapse;
+}
+
+.production-plan-panel thead th {
+  background: #eaf2ff !important;
+  color: #16324f !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  padding: 13px !important;
+  text-align: left;
+}
+
+.production-plan-panel tbody td {
+  background: #ffffff !important;
+  color: #334155 !important;
+  font-size: 14px !important;
+  padding: 13px !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+
+/* Edit button or link */
+.production-plan-panel button,
+.production-plan-panel a {
+  color: #2563eb !important;
+  font-size: 14px !important;
+  font-weight: 600;
+}
+
+.production-plan-panel button {
+  cursor: pointer;
+}
+
+/* Input fields */
+.production-plan-panel input,
+.production-plan-panel select {
+  color: #16324f !important;
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  font-size: 14px !important;
+}
+
+/* Placeholder text */
+.production-plan-panel input::placeholder {
+  color: #64748b !important;
+  opacity: 1;
+}
+
+/* Footer information */
+.production-plan-panel .muted,
+.production-plan-panel .muted-small,
+.production-plan-panel small {
+  color: #475569 !important;
+}
+
+/* ===== PRODUCTION PLAN: FIX INVISIBLE TEXT ===== */
+
+/* Keep all table headings readable on light blue */
+.table-scroll table thead th {
+  color: #16324f !important;
+  background: #eaf2ff !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  opacity: 1 !important;
+  text-shadow: none !important;
+}
+
+/* Table body text */
+.table-scroll table tbody td {
+  color: #16324f !important;
+  background-color: #ffffff !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  opacity: 1 !important;
+}
+
+/* Edit button/link */
+.table-scroll table tbody td .text-button {
+  color: #1d4ed8 !important;
+  background: #eff6ff !important;
+  border: 1px solid #bfdbfe !important;
+  border-radius: 5px !important;
+  padding: 7px 12px !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  opacity: 1 !important;
+  text-decoration: none !important;
+  cursor: pointer !important;
+}
+
+.table-scroll table tbody td .text-button:hover {
+  color: #ffffff !important;
+  background: #1d4ed8 !important;
+}
+
+/* Empty table message */
+.table-scroll table tbody td.empty-state {
+  color: #475569 !important;
+  background: #ffffff !important;
+  font-size: 14px !important;
+  opacity: 1 !important;
+}
+
+/* Production Plan explanatory text */
+.panel .panel-footnote {
+  color: #334155 !important;
+  font-size: 13px !important;
+  line-height: 1.6 !important;
+  opacity: 1 !important;
+}
+
+/* Improve section subtitles */
+.panel .section-heading p {
+  color: #475569 !important;
+  font-size: 14px !important;
+  line-height: 1.6 !important;
+  opacity: 1 !important;
+}
+
+/* Ensure table borders remain visible */
+.table-scroll table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.table-scroll table th,
+.table-scroll table td {
+  border-bottom: 1px solid #dbe4f0 !important;
+  padding: 12px !important;
+}
+
+/* Hourly Data: force production-hour digits to remain visible */
+table tbody tr td:first-child {
+  min-width: 165px !important;
+  width: 165px !important;
+  color: #102a43 !important;
+  background-color: #ffffff !important;
+  white-space: nowrap !important;
+  overflow: visible !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+table tbody tr td:first-child span,
+table tbody tr td:first-child strong {
+  color: #102a43 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+}
+
+/* Fix invisible Running Achievement percentage digits */
+table tbody td span {
+  color: #102a43 !important;
+  -webkit-text-fill-color: #102a43 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  line-height: 20px !important;
+}
+
+/* Keep the hourly achievement percentage readable */
+.graph-panel table tbody td span,
+.panel table tbody td span {
+  color: #102a43 !important;
+  -webkit-text-fill-color: #102a43 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
