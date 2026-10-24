@@ -77,6 +77,20 @@ function pinMatches(inputPin) {
     );
 }
 
+// Separate PIN for machine configuration; never reuse PLAN_EDIT_PIN here.
+function getConfiguredMachineConfigPin() {
+    const pin = String(process.env.MACHINE_CONFIG_PIN || '');
+    return /^\d{4}$/.test(pin) ? pin : null;
+}
+
+function machineConfigPinMatches(inputPin) {
+    const configuredPin = getConfiguredMachineConfigPin();
+    if (!configuredPin) return false;
+    const input = String(inputPin || '');
+    if (!/^\d{4}$/.test(input)) return false;
+    return crypto.timingSafeEqual(Buffer.from(input), Buffer.from(configuredPin));
+}
+
 // ==========================================
 // API 1: Health check
 // ==========================================
@@ -135,6 +149,144 @@ app.get('/api/machines', async (req, res) => {
         res.status(500).json({
             message: 'Unable to load machines.'
         });
+    }
+});
+
+// ==========================================
+// Machine configuration APIs (PIN protected)
+// ==========================================
+app.post('/api/machines/verify-pin', (req, res) => {
+    if (!getConfiguredMachineConfigPin()) {
+        return res.status(503).json({ message: 'MACHINE_CONFIG_PIN is not configured as a 4-digit PIN in the backend .env file.' });
+    }
+    if (!machineConfigPinMatches(req.body?.pin)) {
+        return res.status(401).json({ verified: false, message: 'Incorrect machine configuration PIN.' });
+    }
+    return res.json({ verified: true, message: 'Machine configuration PIN verified.' });
+});
+
+function validMachinePayload(body) {
+    const machine_code = String(body.machine_code || '').trim().toUpperCase();
+    const machine_name = String(body.machine_name || '').trim();
+    const cell_id = String(body.cell_id || '').trim().toUpperCase();
+    const plc_ip = String(body.plc_ip || '').trim();
+    const plc_port = Number(body.plc_port || 7012);
+    if (!/^[A-Z0-9_-]{2,30}$/.test(machine_code)) return { error: 'Machine code must contain 2–30 letters, numbers, _ or -.' };
+    if (!machine_name || machine_name.length > 100) return { error: 'Enter a machine name (maximum 100 characters).' };
+    if (!/^[A-J]$/.test(cell_id)) return { error: 'Cell must be A to J.' };
+    if (plc_ip && !/^(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.){3}(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)$/.test(plc_ip)) return { error: 'Enter a valid IPv4 PLC address.' };
+    if (!Number.isInteger(plc_port) || plc_port < 1 || plc_port > 65535) return { error: 'PLC port must be between 1 and 65535.' };
+    return { value: { machine_code, machine_name, cell_id, plc_ip: plc_ip || null, plc_port } };
+}
+
+app.post('/api/machines', async (req, res) => {
+    if (!getConfiguredMachineConfigPin()) return res.status(503).json({ message: 'Configure MACHINE_CONFIG_PIN as a 4-digit PIN in the backend .env file.' });
+    if (!machineConfigPinMatches(req.body.pin)) return res.status(403).json({ message: 'Invalid machine configuration PIN.' });
+    const checked = validMachinePayload(req.body);
+    if (checked.error) return res.status(400).json({ message: checked.error });
+    try {
+        const m = checked.value;
+        const [result] = await pool.execute('INSERT INTO machines (machine_code, machine_name, cell_id, plc_ip, plc_port, active) VALUES (?, ?, ?, ?, ?, 1)', [m.machine_code, m.machine_name, m.cell_id, m.plc_ip, m.plc_port]);
+        res.status(201).json({ message: 'Machine added successfully.', id: result.insertId });
+    } catch (error) {
+        console.error('Add machine error:', error.message);
+        res.status(error.code === 'ER_DUP_ENTRY' ? 409 : 500).json({ message: error.code === 'ER_DUP_ENTRY' ? 'Machine code already exists.' : 'Unable to add machine.' });
+    }
+});
+
+app.put('/api/machines/:id', async (req, res) => {
+    if (!getConfiguredMachineConfigPin()) return res.status(503).json({ message: 'Configure MACHINE_CONFIG_PIN as a 4-digit PIN in the backend .env file.' });
+    if (!machineConfigPinMatches(req.body.pin)) return res.status(403).json({ message: 'Invalid machine configuration PIN.' });
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id < 1) return res.status(400).json({ message: 'Invalid machine ID.' });
+    const checked = validMachinePayload(req.body);
+    if (checked.error) return res.status(400).json({ message: checked.error });
+    try {
+        const m = checked.value;
+        const [result] = await pool.execute('UPDATE machines SET machine_code=?, machine_name=?, cell_id=?, plc_ip=?, plc_port=? WHERE id=?', [m.machine_code, m.machine_name, m.cell_id, m.plc_ip, m.plc_port, id]);
+        if (!result.affectedRows) return res.status(404).json({ message: 'Machine not found.' });
+        res.json({ message: 'Machine updated successfully.' });
+    } catch (error) {
+        console.error('Update machine error:', error.message);
+        res.status(error.code === 'ER_DUP_ENTRY' ? 409 : 500).json({ message: error.code === 'ER_DUP_ENTRY' ? 'Machine code already exists.' : 'Unable to update machine.' });
+    }
+});
+
+app.patch('/api/machines/:id/active', async (req, res) => {
+    if (!getConfiguredMachineConfigPin()) return res.status(503).json({ message: 'Configure MACHINE_CONFIG_PIN as a 4-digit PIN in the backend .env file.' });
+    if (!machineConfigPinMatches(req.body.pin)) return res.status(403).json({ message: 'Invalid machine configuration PIN.' });
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id < 1 || typeof req.body.active !== 'boolean') return res.status(400).json({ message: 'Valid machine ID and active status are required.' });
+    try {
+        const [result] = await pool.execute('UPDATE machines SET active=? WHERE id=?', [req.body.active ? 1 : 0, id]);
+        if (!result.affectedRows) return res.status(404).json({ message: 'Machine not found.' });
+        res.json({ message: req.body.active ? 'Machine activated.' : 'Machine deactivated. Historical data is preserved.' });
+    } catch (error) {
+        console.error('Machine status error:', error.message);
+        res.status(500).json({ message: 'Unable to change machine status.' });
+    }
+});
+
+app.get('/api/machines/:id/tags', async (req, res) => {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id < 1) return res.status(400).json({ message: 'Invalid machine ID.' });
+    try {
+        const [rows] = await pool.execute('SELECT id, machine_id, tag_type, hour_no, register_address, data_type, active FROM plc_tags WHERE machine_id=? ORDER BY tag_type, hour_no', [id]);
+        res.json(rows);
+    } catch (error) {
+        console.error('Machine tags query error:', error.message);
+        res.status(500).json({ message: 'Unable to load PLC tags. Confirm the plc_tags table exists.' });
+    }
+});
+
+app.post('/api/machines/:id/tags', async (req, res) => {
+    if (!getConfiguredMachineConfigPin()) return res.status(503).json({ message: 'Configure MACHINE_CONFIG_PIN as a 4-digit PIN in the backend .env file.' });
+    if (!machineConfigPinMatches(req.body.pin)) return res.status(403).json({ message: 'Invalid machine configuration PIN.' });
+    const machineId = Number(req.params.id);
+    const tag_type = String(req.body.tag_type || '');
+    const hour_no = Number(req.body.hour_no);
+    const register_address = String(req.body.register_address || '').trim().toUpperCase();
+    const data_type = String(req.body.data_type || 'WORD').trim().toUpperCase();
+    if (!Number.isInteger(machineId) || machineId < 1 || !['production', 'running_time'].includes(tag_type) || !Number.isInteger(hour_no) || hour_no < 1 || hour_no > 24 || !/^[D][0-9]{1,5}$/.test(register_address) || !['WORD', 'UWORD', 'INT', 'UINT', 'DWORD', 'UDWORD'].includes(data_type)) return res.status(400).json({ message: 'Invalid tag. Use production/running_time, hour 1–24, a D-register address and supported data type.' });
+    try {
+        const [result] = await pool.execute('INSERT INTO plc_tags (machine_id, tag_type, hour_no, register_address, data_type, active) VALUES (?, ?, ?, ?, ?, 1)', [machineId, tag_type, hour_no, register_address, data_type]);
+        res.status(201).json({ message: 'PLC tag added.', id: result.insertId });
+    } catch (error) {
+        console.error('Add PLC tag error:', error.message);
+        res.status(error.code === 'ER_DUP_ENTRY' ? 409 : 500).json({ message: error.code === 'ER_DUP_ENTRY' ? 'A tag already exists for this hour/type.' : 'Unable to add PLC tag. Check plc_tags schema and machine ID.' });
+    }
+});
+
+app.put('/api/machines/:id/tags/:tagId', async (req, res) => {
+    if (!getConfiguredMachineConfigPin()) return res.status(503).json({ message: 'Configure MACHINE_CONFIG_PIN as a 4-digit PIN in the backend .env file.' });
+    if (!machineConfigPinMatches(req.body.pin)) return res.status(403).json({ message: 'Invalid machine configuration PIN.' });
+    const machineId = Number(req.params.id), tagId = Number(req.params.tagId);
+    const tag_type = String(req.body.tag_type || ''), hour_no = Number(req.body.hour_no);
+    const register_address = String(req.body.register_address || '').trim().toUpperCase();
+    const data_type = String(req.body.data_type || 'WORD').trim().toUpperCase();
+    if (!Number.isInteger(machineId) || !Number.isInteger(tagId) || !['production', 'running_time'].includes(tag_type) || !Number.isInteger(hour_no) || hour_no < 1 || hour_no > 24 || !/^D[0-9]{1,5}$/.test(register_address) || !['WORD', 'UWORD', 'INT', 'UINT', 'DWORD', 'UDWORD'].includes(data_type)) return res.status(400).json({ message: 'Invalid PLC tag values.' });
+    try {
+        const [result] = await pool.execute('UPDATE plc_tags SET tag_type=?, hour_no=?, register_address=?, data_type=? WHERE id=? AND machine_id=?', [tag_type, hour_no, register_address, data_type, tagId, machineId]);
+        if (!result.affectedRows) return res.status(404).json({ message: 'PLC tag not found.' });
+        res.json({ message: 'PLC tag updated.' });
+    } catch (error) {
+        console.error('Update PLC tag error:', error.message);
+        res.status(error.code === 'ER_DUP_ENTRY' ? 409 : 500).json({ message: error.code === 'ER_DUP_ENTRY' ? 'A tag already exists for this hour/type.' : 'Unable to update PLC tag.' });
+    }
+});
+
+app.patch('/api/machines/:id/tags/:tagId/active', async (req, res) => {
+    if (!getConfiguredMachineConfigPin()) return res.status(503).json({ message: 'Configure MACHINE_CONFIG_PIN as a 4-digit PIN in the backend .env file.' });
+    if (!machineConfigPinMatches(req.body.pin)) return res.status(403).json({ message: 'Invalid machine configuration PIN.' });
+    const machineId = Number(req.params.id), tagId = Number(req.params.tagId);
+    if (!Number.isInteger(machineId) || !Number.isInteger(tagId) || typeof req.body.active !== 'boolean') return res.status(400).json({ message: 'Invalid tag ID or active status.' });
+    try {
+        const [result] = await pool.execute('UPDATE plc_tags SET active=? WHERE id=? AND machine_id=?', [req.body.active ? 1 : 0, tagId, machineId]);
+        if (!result.affectedRows) return res.status(404).json({ message: 'PLC tag not found.' });
+        res.json({ message: 'PLC tag status updated.' });
+    } catch (error) {
+        console.error('PLC tag status error:', error.message);
+        res.status(500).json({ message: 'Unable to change PLC tag status.' });
     }
 });
 

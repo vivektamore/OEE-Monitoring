@@ -118,6 +118,18 @@ function App() {
   const [selectedPeriod, setSelectedPeriod] = useState('Today')
   const [selectedGraph, setSelectedGraph] = useState('Production')
   const [search, setSearch] = useState('')
+  const [managedMachines, setManagedMachines] = useState([])
+  const [machineLoading, setMachineLoading] = useState(false)
+  const [machineMessage, setMachineMessage] = useState('')
+  const [machineMessageError, setMachineMessageError] = useState(false)
+  const [machinePin, setMachinePin] = useState('')
+  const [machineBusy, setMachineBusy] = useState(false)
+  const [editingMachineId, setEditingMachineId] = useState(null)
+  const [machineForm, setMachineForm] = useState({ machine_code: '', machine_name: '', cell_id: 'A', plc_ip: '', plc_port: '7012' })
+  const [tagMachine, setTagMachine] = useState('')
+  const [machineTags, setMachineTags] = useState([])
+  const [tagForm, setTagForm] = useState({ tag_type: 'production', hour_no: '1', register_address: 'D943', data_type: 'WORD' })
+  const [editingTagId, setEditingTagId] = useState(null)
   const [selectedDate, setSelectedDate] = useState(() => {
      const today = new Date()
      const year = today.getFullYear()
@@ -826,6 +838,85 @@ function App() {
     }
   }
 
+  async function loadManagedMachines() {
+    setMachineLoading(true)
+    try {
+      const response = await fetch('http://192.168.8.163:3001/api/machines')
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.message || 'Unable to load machines.')
+      setManagedMachines(Array.isArray(data) ? data : [])
+      if (!tagMachine && data.length) setTagMachine(String(data[0].id))
+    } catch (error) {
+      setMachineMessage(error.message || 'Unable to load machines.')
+      setMachineMessageError(true)
+    } finally { setMachineLoading(false) }
+  }
+
+  useEffect(() => { if (activePage === 'Machines') loadManagedMachines() }, [activePage])
+
+  useEffect(() => {
+    if (activePage !== 'Machines' || !tagMachine) { setMachineTags([]); return }
+    let cancelled = false
+    fetch(`http://192.168.8.163:3001/api/machines/${tagMachine}/tags`)
+      .then(async response => { const data = await response.json(); if (!response.ok) throw new Error(data.message || 'Unable to load PLC tags.'); return data })
+      .then(data => { if (!cancelled) setMachineTags(Array.isArray(data) ? data : []) })
+      .catch(error => { if (!cancelled) { setMachineTags([]); setMachineMessage(error.message); setMachineMessageError(true) } })
+    return () => { cancelled = true }
+  }, [activePage, tagMachine])
+
+  function resetMachineForm() {
+    setEditingMachineId(null)
+    setMachineForm({ machine_code: '', machine_name: '', cell_id: 'A', plc_ip: '', plc_port: '7012' })
+  }
+
+  async function saveManagedMachine(event) {
+    event.preventDefault()
+    setMachineBusy(true); setMachineMessage(''); setMachineMessageError(false)
+    try {
+      const response = await fetch(`http://192.168.8.163:3001/api/machines${editingMachineId ? `/${editingMachineId}` : ''}`, {
+        method: editingMachineId ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...machineForm, plc_port: Number(machineForm.plc_port), pin: machinePin })
+      })
+      const result = await response.json()
+      if (!response.ok) throw new Error(result.message || 'Unable to save machine.')
+      setMachineMessage(result.message || 'Machine saved.'); setMachineMessageError(false)
+      resetMachineForm(); await loadManagedMachines()
+    } catch (error) { setMachineMessage(error.message || 'Unable to save machine.'); setMachineMessageError(true) }
+    finally { setMachineBusy(false) }
+  }
+
+  async function toggleMachineActive(machine) {
+    if (!machinePin || !/^\d{4}$/.test(machinePin)) { setMachineMessage('Enter the machine configuration PIN first.'); setMachineMessageError(true); return }
+    const active = !(Number(machine.active) === 1 || machine.active === true)
+    if (!window.confirm(`${active ? 'Activate' : 'Deactivate'} ${machine.machine_code}? Historical data will be preserved.`)) return
+    try {
+      const response = await fetch(`http://192.168.8.163:3001/api/machines/${machine.id}/active`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ active, pin: machinePin }) })
+      const result = await response.json(); if (!response.ok) throw new Error(result.message || 'Unable to update machine status.')
+      setMachineMessage(result.message); setMachineMessageError(false); await loadManagedMachines()
+    } catch (error) { setMachineMessage(error.message); setMachineMessageError(true) }
+  }
+
+  async function saveMachineTag(event) {
+    event.preventDefault()
+    if (!tagMachine) return
+    setMachineBusy(true); setMachineMessage(''); setMachineMessageError(false)
+    try {
+      const url = `http://192.168.8.163:3001/api/machines/${tagMachine}/tags${editingTagId ? `/${editingTagId}` : ''}`
+      const response = await fetch(url, { method: editingTagId ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...tagForm, hour_no: Number(tagForm.hour_no), pin: machinePin }) })
+      const result = await response.json(); if (!response.ok) throw new Error(result.message || 'Unable to save PLC tag.')
+      setMachineMessage(result.message); setMachineMessageError(false); setEditingTagId(null)
+      setTagForm({ tag_type: 'production', hour_no: '1', register_address: 'D943', data_type: 'WORD' })
+      const tagsResponse = await fetch(`http://192.168.8.163:3001/api/machines/${tagMachine}/tags`)
+      const tags = await tagsResponse.json(); if (tagsResponse.ok) setMachineTags(tags)
+    } catch (error) { setMachineMessage(error.message); setMachineMessageError(true) }
+    finally { setMachineBusy(false) }
+  }
+
+  function editManagedMachine(machine) {
+    setEditingMachineId(machine.id)
+    setMachineForm({ machine_code: machine.machine_code || '', machine_name: machine.machine_name || '', cell_id: String(machine.cell_id || 'A'), plc_ip: machine.plc_ip || '', plc_port: String(machine.plc_port || 7012) })
+  }
+
   const filteredMachines = machineRows.filter((machine) =>
     machine.name.toLowerCase().includes(search.toLowerCase())
   )
@@ -961,7 +1052,47 @@ function App() {
             </div>
           </div>
 
-          {activePage === 'Utilization' ? (
+          {activePage === 'Machines' ? (
+            <>
+              <section className="panel" style={{ marginTop: 20 }}>
+                <SectionTitle title="Machine Configuration" subtitle="Add or edit machine details and PLC network settings. Deactivation preserves historical records." right={<button className="primary-button" onClick={() => { resetMachineForm(); setMachineMessage('') }}>＋ Add Machine</button>} />
+                {machineMessage && <p role="status" style={{ color: machineMessageError ? '#b91c1c' : '#15803d', marginTop: 12 }}>{machineMessage}</p>}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 14, marginTop: 18 }}>
+                  <label className="filter-box"><span>Machine Configuration PIN (separate from Production Plan PIN)</span><input type="password" inputMode="numeric" maxLength={4} value={machinePin} onChange={e => setMachinePin(e.target.value.replace(/\D/g, '').slice(0, 4))} placeholder="Enter PIN" /></label>
+                  <div className="kpi-card"><div className="kpi-label">Configured machines</div><div className="kpi-value">{managedMachines.length}<span> machines</span></div><div className="kpi-bottom">Live list from MySQL</div></div>
+                  <div className="kpi-card"><div className="kpi-label">Active machines</div><div className="kpi-value">{managedMachines.filter(m => Number(m.active) === 1 || m.active === true).length}</div><div className="kpi-bottom">Inactive machines retain history</div></div>
+                </div>
+                <form onSubmit={saveManagedMachine} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14, marginTop: 20, padding: 16, border: '1px solid #e2e8f0', borderRadius: 12 }}>
+                  <div style={{ gridColumn: '1 / -1', fontWeight: 700 }}>{editingMachineId ? 'Edit machine' : 'Add new machine'}</div>
+                  <label className="filter-box"><span>Machine code</span><input required maxLength={30} value={machineForm.machine_code} onChange={e => setMachineForm({ ...machineForm, machine_code: e.target.value.toUpperCase() })} placeholder="e.g. AA1" /></label>
+                  <label className="filter-box"><span>Machine name</span><input required maxLength={100} value={machineForm.machine_name} onChange={e => setMachineForm({ ...machineForm, machine_name: e.target.value })} placeholder="e.g. Press Machine 01" /></label>
+                  <label className="filter-box"><span>Cell</span><select value={machineForm.cell_id} onChange={e => setMachineForm({ ...machineForm, cell_id: e.target.value })}>{['A','B','C','D','E','F','G','H','I','J'].map(c => <option key={c} value={c}>Cell {c}</option>)}</select></label>
+                  <label className="filter-box"><span>PLC IPv4 address</span><input value={machineForm.plc_ip} onChange={e => setMachineForm({ ...machineForm, plc_ip: e.target.value })} placeholder="192.168.8.xxx" /></label>
+                  <label className="filter-box"><span>SLMP TCP port</span><input type="number" min="1" max="65535" required value={machineForm.plc_port} onChange={e => setMachineForm({ ...machineForm, plc_port: e.target.value })} /></label>
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'end' }}><button className="primary-button" type="submit" disabled={machineBusy}>{machineBusy ? 'Saving…' : editingMachineId ? 'Save Changes' : 'Add Machine'}</button><button className="primary-button" type="button" onClick={resetMachineForm}>Cancel</button></div>
+                </form>
+                <div className="table-wrap" style={{ marginTop: 20 }}><table><thead><tr><th>Code</th><th>Machine</th><th>Cell</th><th>PLC IP</th><th>Port</th><th>Status</th><th>Actions</th></tr></thead><tbody>
+                  {managedMachines.map(machine => <tr key={machine.id}><td><strong>{machine.machine_code}</strong></td><td>{machine.machine_name}</td><td>{machine.cell_id}</td><td>{machine.plc_ip || 'Not set'}</td><td>{machine.plc_port || 7012}</td><td><span className={`status-pill ${(Number(machine.active) === 1 || machine.active === true) ? 'good' : 'bad'}`}>{(Number(machine.active) === 1 || machine.active === true) ? 'Active' : 'Inactive'}</span></td><td><button className="primary-button" onClick={() => editManagedMachine(machine)}>Edit</button> <button className="primary-button" onClick={() => toggleMachineActive(machine)}>{(Number(machine.active) === 1 || machine.active === true) ? 'Deactivate' : 'Activate'}</button></td></tr>)}
+                  {managedMachines.length === 0 && <tr><td colSpan="7" className="empty-state">{machineLoading ? 'Loading machines…' : 'No machines found. Confirm the machines table and backend connection.'}</td></tr>}
+                </tbody></table></div>
+              </section>
+              <section className="panel" style={{ marginTop: 20 }}>
+                <SectionTitle title="PLC Tag Configuration" subtitle="Configure hourly production and running-time D-registers for a selected machine. Changes are saved to plc_tags." />
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, marginTop: 16 }}>
+                  <label className="filter-box"><span>Machine</span><select value={tagMachine} onChange={e => { setTagMachine(e.target.value); setEditingTagId(null) }}>{managedMachines.map(m => <option key={m.id} value={m.id}>{m.machine_code} — {m.machine_name}</option>)}</select></label>
+                </div>
+                <form onSubmit={saveMachineTag} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 14, marginTop: 16 }}>
+                  <label className="filter-box"><span>Tag type</span><select value={tagForm.tag_type} onChange={e => setTagForm({ ...tagForm, tag_type: e.target.value })}><option value="production">Production count</option><option value="running_time">Running time</option></select></label>
+                  <label className="filter-box"><span>Hour number (1–24)</span><input type="number" min="1" max="24" required value={tagForm.hour_no} onChange={e => setTagForm({ ...tagForm, hour_no: e.target.value })} /></label>
+                  <label className="filter-box"><span>D register address</span><input required pattern="D[0-9]{1,5}" value={tagForm.register_address} onChange={e => setTagForm({ ...tagForm, register_address: e.target.value.toUpperCase() })} placeholder="D943" /></label>
+                  <label className="filter-box"><span>Data type</span><select value={tagForm.data_type} onChange={e => setTagForm({ ...tagForm, data_type: e.target.value })}>{['WORD','UWORD','INT','UINT','DWORD','UDWORD'].map(t => <option key={t}>{t}</option>)}</select></label>
+                  <div style={{ display: 'flex', alignItems: 'end', gap: 10 }}><button className="primary-button" type="submit" disabled={machineBusy || !tagMachine}>{editingTagId ? 'Update Tag' : 'Add Tag'}</button><button type="button" className="primary-button" onClick={() => { setEditingTagId(null); setTagForm({ tag_type: 'production', hour_no: '1', register_address: 'D943', data_type: 'WORD' }) }}>Clear</button></div>
+                </form>
+                <div className="table-wrap" style={{ marginTop: 16 }}><table><thead><tr><th>Type</th><th>Hour</th><th>Register</th><th>Data type</th><th>Status</th><th>Action</th></tr></thead><tbody>{machineTags.map(tag => <tr key={tag.id}><td>{tag.tag_type}</td><td>{tag.hour_no}</td><td>{tag.register_address}</td><td>{tag.data_type}</td><td>{Number(tag.active) === 1 || tag.active === true ? 'Active' : 'Inactive'}</td><td><button className="primary-button" onClick={() => { setEditingTagId(tag.id); setTagForm({ tag_type: tag.tag_type, hour_no: String(tag.hour_no), register_address: tag.register_address, data_type: tag.data_type || 'WORD' }) }}>Edit</button></td></tr>)}{machineTags.length === 0 && <tr><td colSpan="6" className="empty-state">No tags loaded. Check the plc_tags table and selected machine.</td></tr>}</tbody></table></div>
+                <p className="panel-footnote" style={{ marginTop: 14 }}>Important: the current Node-RED flow is still hardcoded to AA1 and expects exactly 48 tags. This UI saves configuration only; update the SLMP connection and flow logic before expecting another machine to be polled automatically.</p>
+              </section>
+            </>
+          ) : activePage === 'Utilization' ? (
             <section className="panel" style={{ marginTop: 20 }}>
               <SectionTitle
                 title="Machine Utilization"
