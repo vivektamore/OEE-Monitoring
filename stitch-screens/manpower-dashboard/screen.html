@@ -1,0 +1,1295 @@
+<!DOCTYPE html>
+
+<html class="h-full bg-slate-100" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>OEEMONITOR - Manpower Management</title>
+<!-- Tailwind CSS v3 with Plugins -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              navy: '#0b1727',
+              navyLight: '#0f1e36',
+              sidebarHover: '#162846',
+              sidebarActive: '#1d4ed8',
+              accentBlue: '#2563eb',
+              borderDark: '#1e3252'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+            mono: ['JetBrains Mono', 'Menlo', 'Monaco', 'Courier New', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+<!-- BEGIN: Custom Stylesheet Tags -->
+<style data-purpose="custom-scrollbar">
+    /* Industrial scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+    .dark-scroll::-webkit-scrollbar-track {
+      background: #0b1727;
+    }
+    .dark-scroll::-webkit-scrollbar-thumb {
+      background: #1e3252;
+    }
+  </style>
+<style data-purpose="status-indicators">
+    @keyframes pulse-subtle {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.45; }
+    }
+    .pulse-indicator {
+      animation: pulse-subtle 2.5s infinite;
+    }
+  </style>
+<!-- END: Custom Stylesheet Tags -->
+</head>
+<body class="h-full overflow-hidden text-slate-800 antialiased flex flex-col font-sans">
+<div class="flex h-full w-full overflow-hidden">
+<!-- BEGIN: LeftSidebar -->
+<aside class="w-64 bg-[#0b1727] text-slate-300 flex-shrink-0 flex flex-col justify-between border-r border-[#162744] select-none z-20" data-purpose="main-sidebar">
+<!-- Upper Section -->
+<div class="flex flex-col h-full overflow-y-auto dark-scroll">
+<!-- Logo and Brand Header -->
+<div class="px-5 py-4 border-b border-[#162846] flex items-center gap-3">
+<div class="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center text-white font-extrabold text-xl shadow-md shadow-blue-500/20 tracking-wider">
+            O
+          </div>
+<div class="flex flex-col">
+<span class="font-black text-white text-base tracking-wider leading-none">OEEMONITOR</span>
+<span class="text-[9px] tracking-widest text-slate-400 font-semibold uppercase mt-1">INDUSTRIAL INTELLIGENCE</span>
+</div>
+</div>
+<!-- Plant Unit Selector Dropdown Card -->
+<div class="p-3">
+<div class="bg-[#0f1e36] border border-[#1e3252] rounded-lg p-2.5 flex items-center justify-between hover:border-slate-600 cursor-pointer transition">
+<div class="flex items-center gap-2.5">
+<div class="w-7 h-7 rounded bg-blue-900/60 text-blue-400 border border-blue-700/50 flex items-center justify-center font-bold text-xs">
+                VP
+              </div>
+<div class="flex flex-col">
+<span class="text-xs font-semibold text-slate-100 leading-tight">Virar Plant</span>
+<span class="text-[10px] text-slate-400">Manufacturing Unit</span>
+</div>
+</div>
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+</div>
+<!-- Nav Section: PRODUCTION -->
+<div class="px-3 pt-3">
+<div class="text-[10px] font-bold tracking-wider text-slate-400 uppercase px-2 mb-2">Production</div>
+<nav class="space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 text-xs font-medium rounded-md text-slate-300 hover:bg-[#162846] hover:text-white transition" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+<span>Production Plan</span>
+</a>
+<!-- Active Pill: Manpower -->
+<a class="flex items-center gap-3 px-3 py-2 text-xs font-semibold rounded-md bg-blue-600 text-white shadow-sm shadow-blue-600/30" href="#">
+<svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+<span>Manpower</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-xs font-medium rounded-md text-slate-300 hover:bg-[#162846] hover:text-white transition" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+<span>Hourly Data</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-xs font-medium rounded-md text-slate-300 hover:bg-[#162846] hover:text-white transition" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+<span>Shift Data</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-xs font-medium rounded-md text-slate-300 hover:bg-[#162846] hover:text-white transition" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+<span>Utilization</span>
+</a>
+</nav>
+</div>
+<!-- Nav Section: ANALYTICS -->
+<div class="px-3 pt-6">
+<div class="text-[10px] font-bold tracking-wider text-slate-400 uppercase px-2 mb-2">Analytics</div>
+<nav class="space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 text-xs font-medium rounded-md text-slate-300 hover:bg-[#162846] hover:text-white transition" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+<span>Graph Analysis</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-xs font-medium rounded-md text-slate-300 hover:bg-[#162846] hover:text-white transition" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+<span>Reports</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-xs font-medium rounded-md text-slate-300 hover:bg-[#162846] hover:text-white transition" href="#">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+<span>Downtime</span>
+</a>
+</nav>
+</div>
+</div>
+<!-- Bottom System Status & User Profile -->
+<div class="border-t border-[#162846] bg-[#091320] p-3">
+<!-- Local Server Connection Badge -->
+<div class="flex items-center justify-between px-2 py-1.5 mb-2 rounded bg-[#0f1e36]/70 border border-[#1e3252]/60 text-[11px]">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-emerald-500 pulse-indicator"></span>
+<span class="text-slate-300">Internal Server</span>
+</div>
+<span class="text-[10px] text-emerald-400 font-mono">Active</span>
+</div>
+<!-- Administrator Info -->
+<div class="flex items-center justify-between pt-1">
+<div class="flex items-center gap-2.5">
+<div class="w-7 h-7 rounded-full bg-slate-700 border border-slate-600 flex items-center justify-center font-bold text-[11px] text-white">
+              AD
+            </div>
+<div class="flex flex-col">
+<span class="text-xs font-semibold text-slate-200 leading-tight">Administrator</span>
+<span class="text-[10px] text-slate-400 leading-none">System Admin</span>
+</div>
+</div>
+<button class="text-slate-400 hover:text-slate-200" type="button">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</button>
+</div>
+</div>
+</aside>
+<!-- END: LeftSidebar -->
+<!-- BEGIN: MainContentArea -->
+<main class="flex-1 flex flex-col h-full overflow-hidden bg-slate-100">
+<!-- Top Global Bar (Header from reference) -->
+<header class="bg-white border-b border-slate-200 px-6 py-2.5 flex items-center justify-between shrink-0 shadow-sm" data-purpose="top-navigation">
+<!-- Breadcrumb & Plant Level -->
+<div class="flex items-center space-x-2 text-xs">
+<span class="text-slate-500 font-medium">Manufacturing</span>
+<span class="text-slate-400">/</span>
+<span class="text-slate-500 font-medium">Manpower</span>
+<span class="text-slate-400">/</span>
+<span class="text-blue-600 font-semibold">Manpower Management</span>
+</div>
+<!-- Global Utilities -->
+<div class="flex items-center gap-4 text-xs font-medium text-slate-600">
+<div class="flex items-center gap-1.5 bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full border border-emerald-200 text-[11px] font-semibold">
+<span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+<span>LOCAL NETWORK</span>
+</div>
+<button class="p-1.5 text-slate-500 hover:text-slate-700 relative" type="button">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+<span class="absolute top-1 right-1 w-2 h-2 bg-blue-600 rounded-full"></span>
+</button>
+<div class="flex items-center gap-1.5 bg-slate-100 text-slate-700 px-3 py-1 rounded border border-slate-200 font-mono text-[11px]">
+<svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+<span>2026-10-16</span>
+</div>
+</div>
+</header>
+<!-- Scrollable Workspace Content -->
+<div class="flex-1 overflow-y-auto p-6 space-y-6">
+<!-- BEGIN: PageHeaderAndFilters -->
+<section class="space-y-4" data-purpose="page-title-and-controls">
+<!-- Title & Subtitle banner -->
+<div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+<div>
+<div class="text-[11px] font-bold uppercase tracking-wider text-blue-600">Factory Performance Center</div>
+<h1 class="text-2xl font-black text-slate-900 tracking-tight">Manpower Management</h1>
+<p class="text-xs text-slate-500 mt-0.5">Real-time workforce deployment, shift balancing, and swap approvals across production cells</p>
+</div>
+<!-- Main Actions -->
+<div class="flex items-center gap-2.5">
+<button class="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs px-3.5 py-2 rounded-md shadow-sm transition" id="openSwapModalBtn" type="button">
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M12 4v16m8-8H4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+<span>Request Manpower Swap</span>
+</button>
+<button class="inline-flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 font-medium text-xs px-3 py-2 rounded-md shadow-sm transition" type="button">
+<svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+<span>Export to Excel</span>
+</button>
+</div>
+</div>
+<!-- Production Schedule Banner -->
+<div class="bg-blue-50/70 border border-blue-200/80 rounded-lg px-4 py-2.5 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-blue-100 text-blue-700 flex items-center justify-center font-bold">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+<div>
+<span class="text-xs font-bold text-slate-900">Production Day: 06:45 AM – 06:45 AM</span>
+<span class="text-xs text-slate-600 block">24-hour production window · Day boundary follows the factory schedule</span>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-blue-600"></span>
+<span class="text-xs font-semibold uppercase tracking-wider text-blue-700">Live Production Mode</span>
+</div>
+</div>
+<!-- Industrial Filter Control Bar -->
+<div class="bg-white border border-slate-200 rounded-lg p-3 shadow-xs grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 items-end">
+<div>
+<label class="block text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-1">Plant Unit</label>
+<select class="w-full text-xs rounded border-slate-300 py-1.5 focus:border-blue-500 focus:ring-blue-500 font-medium">
+<option>Virar Plant - Unit 1</option>
+<option>Virar Plant - Unit 2 (Stamping)</option>
+</select>
+</div>
+<div>
+<label class="block text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-1">Department</label>
+<select class="w-full text-xs rounded border-slate-300 py-1.5 focus:border-blue-500 focus:ring-blue-500 font-medium" id="deptFilterSelect">
+<option value="ALL">All Departments (9)</option>
+<option value="Press Shop">Press Shop</option>
+<option value="Screw Forging">Screw Forging</option>
+<option value="Grooving">Grooving</option>
+<option value="Deburring">Deburring</option>
+<option value="Laser Marking">Laser Marking</option>
+<option value="Assembly Line 1">Assembly Line 1</option>
+<option value="Quality Assurance">Quality Assurance</option>
+<option value="Maintenance">Maintenance</option>
+<option value="Packaging">Packaging</option>
+</select>
+</div>
+<div>
+<label class="block text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-1">Production Date</label>
+<input class="w-full text-xs rounded border-slate-300 py-1.5 focus:border-blue-500 focus:ring-blue-500 font-medium" type="date" value="2026-10-16"/>
+</div>
+<div>
+<label class="block text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-1">Shift Selection</label>
+<select class="w-full text-xs rounded border-slate-300 py-1.5 focus:border-blue-500 focus:ring-blue-500 font-medium">
+<option selected="">Shift A (06:45 AM - 02:45 PM)</option>
+<option>Shift B (02:45 PM - 10:45 PM)</option>
+<option>Shift C (10:45 PM - 06:45 AM)</option>
+</select>
+</div>
+<div class="flex items-center gap-2">
+<button class="w-full bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold py-2 px-3 rounded shadow-xs transition" type="button">
+                Apply Filters
+              </button>
+<button class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs py-2 px-2.5 rounded border border-slate-300" title="Reset Filters" type="button">
+                ↺
+              </button>
+</div>
+</div>
+</section>
+<!-- END: PageHeaderAndFilters -->
+<!-- BEGIN: Section1_KpiCards -->
+<section data-purpose="manpower-kpi-cards">
+<div class="flex items-center justify-between mb-2">
+<h2 class="text-xs font-bold uppercase tracking-wider text-slate-600">Shift A Workforce Snapshot</h2>
+<span class="text-[10px] bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded tracking-wider">DEMO VALUES</span>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+<!-- Total Target -->
+<div class="bg-white border border-slate-200 rounded-lg p-3.5 shadow-xs relative overflow-hidden">
+<div class="text-[11px] font-semibold text-slate-500 uppercase">Planned Manpower</div>
+<div class="text-2xl font-black text-slate-800 mt-1">350</div>
+<div class="text-[10px] text-slate-500 mt-0.5">Base Roster Requirement</div>
+<div class="absolute top-2 right-2 w-2 h-2 rounded-full bg-slate-400"></div>
+</div>
+<!-- Present Count -->
+<div class="bg-white border border-slate-200 rounded-lg p-3.5 shadow-xs relative overflow-hidden">
+<div class="text-[11px] font-semibold text-slate-500 uppercase">Actual Present</div>
+<div class="flex items-baseline gap-1 mt-1">
+<span class="text-2xl font-black text-slate-800">318</span>
+<span class="text-xs font-bold text-emerald-600">90.8%</span>
+</div>
+<div class="text-[10px] text-slate-500 mt-0.5">Biometric Gate Verified</div>
+<div class="absolute top-2 right-2 w-2 h-2 rounded-full bg-emerald-500"></div>
+</div>
+<!-- Shortage Alert -->
+<div class="bg-red-50/60 border border-red-200 rounded-lg p-3.5 shadow-xs relative overflow-hidden">
+<div class="text-[11px] font-semibold text-red-700 uppercase">Manpower Shortage</div>
+<div class="flex items-baseline gap-1.5 mt-1">
+<span class="text-2xl font-black text-red-600">-32</span>
+<span class="text-[10px] font-bold bg-red-100 text-red-700 px-1.5 py-0.2 rounded">CRITICAL</span>
+</div>
+<div class="text-[10px] text-red-600/80 mt-0.5">Deficit across 6 cells</div>
+<div class="absolute top-2 right-2 w-2 h-2 rounded-full bg-red-500 pulse-indicator"></div>
+</div>
+<!-- Active Swap Requests Pending -->
+<div class="bg-amber-50/70 border border-amber-200 rounded-lg p-3.5 shadow-xs relative overflow-hidden">
+<div class="text-[11px] font-semibold text-amber-800 uppercase">Pending Swaps</div>
+<div class="text-2xl font-black text-amber-700 mt-1">6</div>
+<div class="text-[10px] text-amber-700 mt-0.5">4 need your action</div>
+<div class="absolute top-2 right-2 w-2 h-2 rounded-full bg-amber-500"></div>
+</div>
+<!-- Approved Swaps MTD -->
+<div class="bg-white border border-slate-200 rounded-lg p-3.5 shadow-xs relative overflow-hidden">
+<div class="text-[11px] font-semibold text-slate-500 uppercase">Monthly Swaps</div>
+<div class="text-2xl font-black text-slate-800 mt-1">28</div>
+<div class="text-[10px] text-emerald-600 font-medium mt-0.5">100% compliant</div>
+<div class="absolute top-2 right-2 w-2 h-2 rounded-full bg-blue-500"></div>
+</div>
+<!-- Overall Capacity Utilization -->
+<div class="bg-white border border-slate-200 rounded-lg p-3.5 shadow-xs relative overflow-hidden">
+<div class="text-[11px] font-semibold text-slate-500 uppercase">Cell Utilization</div>
+<div class="text-2xl font-black text-blue-600 mt-1">91.4%</div>
+<div class="w-full bg-slate-100 rounded-full h-1.5 mt-2 overflow-hidden">
+<div class="bg-blue-600 h-1.5 rounded-full" style="width: 91.4%"></div>
+</div>
+</div>
+</div>
+</section>
+<!-- END: Section1_KpiCards -->
+<!-- BEGIN: Section2_DepartmentAllocationTable -->
+<section class="bg-white border border-slate-200 rounded-lg shadow-xs overflow-hidden" data-purpose="department-allocation-grid">
+<!-- Table Bar Header with Filtering & Search -->
+<div class="p-4 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-slate-50/60">
+<div>
+<h2 class="text-sm font-bold text-slate-900 tracking-tight">Department-Wise Manpower Allocation &amp; Real-Time Tracking</h2>
+<p class="text-xs text-slate-500">Live operational staffing balance, net shift swaps, and assigned cell supervisors</p>
+</div>
+<div class="flex items-center gap-2">
+<div class="relative">
+<input class="text-xs rounded border-slate-300 pl-7 pr-3 py-1.5 focus:border-blue-500 focus:ring-blue-500 w-48" id="deptSearchInput" placeholder="Search cell or manager..." type="text"/>
+<svg class="w-3.5 h-3.5 text-slate-400 absolute left-2 top-2.5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+<!-- Filter Pills -->
+<div class="flex items-center bg-slate-200/70 p-0.5 rounded text-xs">
+<button class="px-2.5 py-1 rounded bg-white font-semibold text-slate-800 shadow-xs" type="button">All (9)</button>
+<button class="px-2.5 py-1 rounded text-slate-600 font-medium hover:text-slate-900" type="button">Shortage Only (5)</button>
+</div>
+</div>
+</div>
+<!-- Real-Time Department Table -->
+<div class="overflow-x-auto">
+<table class="w-full text-left text-xs text-slate-600 divide-y divide-slate-200">
+<thead class="bg-slate-100 text-slate-700 font-bold uppercase text-[10px] tracking-wider">
+<tr>
+<th class="py-2.5 px-4" scope="col">Department / Cell</th>
+<th class="py-2.5 px-3 text-center" scope="col">Req.</th>
+<th class="py-2.5 px-3 text-center" scope="col">Alloc.</th>
+<th class="py-2.5 px-3 text-center" scope="col">Present</th>
+<th class="py-2.5 px-3 text-center" scope="col">Shortage</th>
+<th class="py-2.5 px-3 text-center" scope="col">Swap In</th>
+<th class="py-2.5 px-3 text-center" scope="col">Swap Out</th>
+<th class="py-2.5 px-4" scope="col">Effective Utilization</th>
+<th class="py-2.5 px-3" scope="col">Cell Manager</th>
+<th class="py-2.5 px-4 text-right" scope="col">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-200 bg-white" id="departmentTableBody">
+<!-- Row 1: Press Shop (Expandable breakdown) -->
+<tr class="hover:bg-blue-50/40 transition">
+<td class="py-2.5 px-4 font-semibold text-slate-900 flex items-center gap-2">
+<button class="text-blue-600 hover:text-blue-800" id="togglePressShopBtn" type="button">
+<svg class="w-3.5 h-3.5 transform transition-transform" fill="none" id="pressShopChevron" stroke="currentColor" viewbox="0 0 24 24"><path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</button>
+<span>Press Shop</span>
+<span class="text-[10px] font-mono text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">CELL-A</span>
+</td>
+<td class="py-2.5 px-3 text-center font-mono">42</td>
+<td class="py-2.5 px-3 text-center font-mono font-medium text-slate-700">42</td>
+<td class="py-2.5 px-3 text-center font-mono font-bold text-slate-900">36</td>
+<td class="py-2.5 px-3 text-center">
+<span class="inline-block px-2 py-0.5 rounded font-mono font-bold text-[11px] bg-red-100 text-red-700 border border-red-200">-6</span>
+</td>
+<td class="py-2.5 px-3 text-center">
+<span class="inline-block px-1.5 py-0.5 rounded text-[11px] font-semibold bg-emerald-100 text-emerald-800">+2</span>
+</td>
+<td class="py-2.5 px-3 text-center">
+<span class="inline-block px-1.5 py-0.5 rounded text-[11px] font-semibold text-slate-400">0</span>
+</td>
+<td class="py-2.5 px-4">
+<div class="flex items-center gap-2">
+<div class="w-16 bg-slate-200 rounded-full h-1.5">
+<div class="bg-amber-500 h-1.5 rounded-full" style="width: 85.7%"></div>
+</div>
+<span class="text-[11px] font-mono font-semibold text-slate-700">85.7%</span>
+</div>
+</td>
+<td class="py-2.5 px-3 text-slate-700 font-medium">Rajesh S.</td>
+<td class="py-2.5 px-4 text-right space-x-1">
+<button class="px-2 py-1 text-[11px] rounded bg-blue-50 text-blue-700 hover:bg-blue-100 font-semibold border border-blue-200" onclick="openSwapPrefill('Press Shop')" type="button">+ Quick Swap</button>
+<button class="px-2 py-1 text-[11px] rounded bg-slate-100 text-slate-600 hover:bg-slate-200" type="button">Roster</button>
+</td>
+</tr>
+<!-- Expandable Sub-table for Press Shop machine level detail -->
+<tr class="hidden bg-slate-50/90 border-t border-b border-blue-100" id="pressShopDetailRow">
+<td class="py-3 px-8" colspan="10">
+<div class="text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-2 flex items-center justify-between">
+<span>Press Shop Machine Slot Allocation (Press 01 - 08)</span>
+<span class="text-slate-500 font-normal">Standard 5 Ops + 1 QC per heavy line</span>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+<div class="bg-white p-2 rounded border border-slate-200 flex justify-between items-center">
+<div>
+<span class="font-bold text-slate-800">Press 01 (600T)</span>
+<p class="text-[10px] text-slate-500">Piston Ring Blanking</p>
+</div>
+<span class="text-[11px] font-mono font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">6/6 Full</span>
+</div>
+<div class="bg-white p-2 rounded border border-red-200 flex justify-between items-center bg-red-50/30">
+<div>
+<span class="font-bold text-slate-800">Press 02 (400T)</span>
+<p class="text-[10px] text-red-600">Shortage: -2 Feeders</p>
+</div>
+<span class="text-[11px] font-mono font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded">3/5 Deficit</span>
+</div>
+<div class="bg-white p-2 rounded border border-slate-200 flex justify-between items-center">
+<div>
+<span class="font-bold text-slate-800">Press 03 (400T)</span>
+<p class="text-[10px] text-slate-500">Stamping line</p>
+</div>
+<span class="text-[11px] font-mono font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">5/5 Full</span>
+</div>
+<div class="bg-white p-2 rounded border border-amber-200 flex justify-between items-center bg-amber-50/20">
+<div>
+<span class="font-bold text-slate-800">Press 04 (250T)</span>
+<p class="text-[10px] text-amber-600">Shortage: -1 Helper</p>
+</div>
+<span class="text-[11px] font-mono font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded">4/5 Light</span>
+</div>
+</div>
+</td>
+</tr>
+<!-- Row 2: Screw Forging -->
+<tr class="hover:bg-slate-50 transition">
+<td class="py-2.5 px-4 font-semibold text-slate-900 flex items-center gap-2">
+<span class="w-3.5"></span>
+<span>Screw Forging</span>
+<span class="text-[10px] font-mono text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">CELL-B</span>
+</td>
+<td class="py-2.5 px-3 text-center font-mono">38</td>
+<td class="py-2.5 px-3 text-center font-mono font-medium text-slate-700">38</td>
+<td class="py-2.5 px-3 text-center font-mono font-bold text-slate-900">38</td>
+<td class="py-2.5 px-3 text-center">
+<span class="inline-block px-2 py-0.5 rounded font-mono font-bold text-[11px] bg-slate-100 text-slate-600">0</span>
+</td>
+<td class="py-2.5 px-3 text-center">
+<span class="inline-block px-1.5 py-0.5 rounded text-[11px] font-semibold bg-emerald-100 text-emerald-800">+1</span>
+</td>
+<td class="py-2.5 px-3 text-center">
+<span class="inline-block px-1.5 py-0.5 rounded text-[11px] font-semibold bg-amber-100 text-amber-800">-1</span>
+</td>
+<td class="py-2.5 px-4">
+<div class="flex items-center gap-2">
+<div class="w-16 bg-slate-200 rounded-full h-1.5">
+<div class="bg-emerald-500 h-1.5 rounded-full" style="width: 100%"></div>
+</div>
+<span class="text-[11px] font-mono font-semibold text-emerald-600">100%</span>
+</div>
+</td>
+<td class="py-2.5 px-3 text-slate-700 font-medium">Amit K.</td>
+<td class="py-2.5 px-4 text-right space-x-1">
+<button class="px-2 py-1 text-[11px] rounded bg-blue-50 text-blue-700 hover:bg-blue-100 font-semibold border border-blue-200" onclick="openSwapPrefill('Screw Forging')" type="button">+ Quick Swap</button>
+<button class="px-2 py-1 text-[11px] rounded bg-slate-100 text-slate-600 hover:bg-slate-200" type="button">Roster</button>
+</td>
+</tr>
+<!-- Row 3: Grooving -->
+<tr class="hover:bg-slate-50 transition">
+<td class="py-2.5 px-4 font-semibold text-slate-900 flex items-center gap-2">
+<span class="w-3.5"></span>
+<span>Grooving</span>
+<span class="text-[10px] font-mono text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">CELL-C</span>
+</td>
+<td class="py-2.5 px-3 text-center font-mono">30</td>
+<td class="py-2.5 px-3 text-center font-mono font-medium text-slate-700">30</td>
+<td class="py-2.5 px-3 text-center font-mono font-bold text-slate-900">26</td>
+<td class="py-2.5 px-3 text-center">
+<span class="inline-block px-2 py-0.5 rounded font-mono font-bold text-[11px] bg-red-100 text-red-700 border border-red-200">-4</span>
+</td>
+<td class="py-2.5 px-3 text-center">
+<span class="inline-block px-1.5 py-0.5 rounded text-[11px] font-semibold text-slate-400">0</span>
+</td>
+<td class="py-2.5 px-3 text-center">
+<span class="inline-block px-1.5 py-0.5 rounded text-[11px] font-semibold bg-amber-100 text-amber-800">-2</span>
+</td>
+<td class="py-2.5 px-4">
+<div class="flex items-center gap-2">
+<div class="w-16 bg-slate-200 rounded-full h-1.5">
+<div class="bg-amber-500 h-1.5 rounded-full" style="width: 86.6%"></div>
+</div>
+<span class="text-[11px] font-mono font-semibold text-slate-700">86.6%</span>
+</div>
+</td>
+<td class="py-2.5 px-3 text-slate-700 font-medium">V. Nair</td>
+<td class="py-2.5 px-4 text-right space-x-1">
+<button class="px-2 py-1 text-[11px] rounded bg-blue-50 text-blue-700 hover:bg-blue-100 font-semibold border border-blue-200" onclick="openSwapPrefill('Grooving')" type="button">+ Quick Swap</button>
+<button class="px-2 py-1 text-[11px] rounded bg-slate-100 text-slate-600 hover:bg-slate-200" type="button">Roster</button>
+</td>
+</tr>
+<!-- Row 4: Deburring -->
+<tr class="hover:bg-slate-50 transition">
+<td class="py-2.5 px-4 font-semibold text-slate-900 flex items-center gap-2">
+<span class="w-3.5"></span>
+<span>Deburring</span>
+<span class="text-[10px] font-mono text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">CELL-D</span>
+</td>
+<td class="py-2.5 px-3 text-center font-mono">28</td>
+<td class="py-2.5 px-3 text-center font-mono font-medium text-slate-700">28</td>
+<td class="py-2.5 px-3 text-center font-mono font-bold text-slate-900">27</td>
+<td class="py-2.5 px-3 text-center">
+<span class="inline-block px-2 py-0.5 rounded font-mono font-bold text-[11px] bg-red-100 text-red-700 border border-red-200">-1</span>
+</td>
+<td class="py-2.5 px-3 text-center">
+<span class="inline-block px-1.5 py-0.5 rounded text-[11px] font-semibold bg-emerald-100 text-emerald-800">+1</span>
+</td>
+<td class="py-2.5 px-3 text-center">
+<span class="inline-block px-1.5 py-0.5 rounded text-[11px] font-semibold text-slate-400">0</span>
+</td>
+<td class="py-2.5 px-4">
+<div class="flex items-center gap-2">
+<div class="w-16 bg-slate-200 rounded-full h-1.5">
+<div class="bg-emerald-500 h-1.5 rounded-full" style="width: 96.4%"></div>
+</div>
+<span class="text-[11px] font-mono font-semibold text-slate-700">96.4%</span>
+</div>
+</td>
+<td class="py-2.5 px-3 text-slate-700 font-medium">Sunita M.</td>
+<td class="py-2.5 px-4 text-right space-x-1">
+<button class="px-2 py-1 text-[11px] rounded bg-blue-50 text-blue-700 hover:bg-blue-100 font-semibold border border-blue-200" onclick="openSwapPrefill('Deburring')" type="button">+ Quick Swap</button>
+<button class="px-2 py-1 text-[11px] rounded bg-slate-100 text-slate-600 hover:bg-slate-200" type="button">Roster</button>
+</td>
+</tr>
+<!-- Row 5: Laser Marking -->
+<tr class="hover:bg-slate-50 transition">
+<td class="py-2.5 px-4 font-semibold text-slate-900 flex items-center gap-2">
+<span class="w-3.5"></span>
+<span>Laser Marking</span>
+<span class="text-[10px] font-mono text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">CELL-E</span>
+</td>
+<td class="py-2.5 px-3 text-center font-mono">24</td>
+<td class="py-2.5 px-3 text-center font-mono font-medium text-slate-700">24</td>
+<td class="py-2.5 px-3 text-center font-mono font-bold text-slate-900">24</td>
+<td class="py-2.5 px-3 text-center">
+<span class="inline-block px-2 py-0.5 rounded font-mono font-bold text-[11px] bg-slate-100 text-slate-600">0</span>
+</td>
+<td class="py-2.5 px-3 text-center">
+<span class="inline-block px-1.5 py-0.5 rounded text-[11px] font-semibold text-slate-400">0</span>
+</td>
+<td class="py-2.5 px-3 text-center">
+<span class="inline-block px-1.5 py-0.5 rounded text-[11px] font-semibold text-slate-400">0</span>
+</td>
+<td class="py-2.5 px-4">
+<div class="flex items-center gap-2">
+<div class="w-16 bg-slate-200 rounded-full h-1.5">
+<div class="bg-emerald-500 h-1.5 rounded-full" style="width: 100%"></div>
+</div>
+<span class="text-[11px] font-mono font-semibold text-emerald-600">100%</span>
+</div>
+</td>
+<td class="py-2.5 px-3 text-slate-700 font-medium">D. Patil</td>
+<td class="py-2.5 px-4 text-right space-x-1">
+<button class="px-2 py-1 text-[11px] rounded bg-blue-50 text-blue-700 hover:bg-blue-100 font-semibold border border-blue-200" onclick="openSwapPrefill('Laser Marking')" type="button">+ Quick Swap</button>
+<button class="px-2 py-1 text-[11px] rounded bg-slate-100 text-slate-600 hover:bg-slate-200" type="button">Roster</button>
+</td>
+</tr>
+<!-- Row 6: Assembly Line 1 -->
+<tr class="hover:bg-slate-50 transition">
+<td class="py-2.5 px-4 font-semibold text-slate-900 flex items-center gap-2">
+<span class="w-3.5"></span>
+<span>Assembly Line 1</span>
+<span class="text-[10px] font-mono text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">CELL-F</span>
+</td>
+<td class="py-2.5 px-3 text-center font-mono">55</td>
+<td class="py-2.5 px-3 text-center font-mono font-medium text-slate-700">55</td>
+<td class="py-2.5 px-3 text-center font-mono font-bold text-slate-900">48</td>
+<td class="py-2.5 px-3 text-center">
+<span class="inline-block px-2 py-0.5 rounded font-mono font-bold text-[11px] bg-red-100 text-red-700 border border-red-200">-7</span>
+</td>
+<td class="py-2.5 px-3 text-center">
+<span class="inline-block px-1.5 py-0.5 rounded text-[11px] font-semibold bg-emerald-100 text-emerald-800">+4</span>
+</td>
+<td class="py-2.5 px-3 text-center">
+<span class="inline-block px-1.5 py-0.5 rounded text-[11px] font-semibold bg-amber-100 text-amber-800">-1</span>
+</td>
+<td class="py-2.5 px-4">
+<div class="flex items-center gap-2">
+<div class="w-16 bg-slate-200 rounded-full h-1.5">
+<div class="bg-amber-500 h-1.5 rounded-full" style="width: 87.2%"></div>
+</div>
+<span class="text-[11px] font-mono font-semibold text-slate-700">87.2%</span>
+</div>
+</td>
+<td class="py-2.5 px-3 text-slate-700 font-medium">R. Verma</td>
+<td class="py-2.5 px-4 text-right space-x-1">
+<button class="px-2 py-1 text-[11px] rounded bg-blue-50 text-blue-700 hover:bg-blue-100 font-semibold border border-blue-200" onclick="openSwapPrefill('Assembly Line 1')" type="button">+ Quick Swap</button>
+<button class="px-2 py-1 text-[11px] rounded bg-slate-100 text-slate-600 hover:bg-slate-200" type="button">Roster</button>
+</td>
+</tr>
+<!-- Row 7: Quality Assurance -->
+<tr class="hover:bg-slate-50 transition">
+<td class="py-2.5 px-4 font-semibold text-slate-900 flex items-center gap-2">
+<span class="w-3.5"></span>
+<span>Quality Assurance</span>
+<span class="text-[10px] font-mono text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">SUPPORT</span>
+</td>
+<td class="py-2.5 px-3 text-center font-mono">22</td>
+<td class="py-2.5 px-3 text-center font-mono font-medium text-slate-700">22</td>
+<td class="py-2.5 px-3 text-center font-mono font-bold text-slate-900">22</td>
+<td class="py-2.5 px-3 text-center">
+<span class="inline-block px-2 py-0.5 rounded font-mono font-bold text-[11px] bg-slate-100 text-slate-600">0</span>
+</td>
+<td class="py-2.5 px-3 text-center">
+<span class="inline-block px-1.5 py-0.5 rounded text-[11px] font-semibold bg-emerald-100 text-emerald-800">+1</span>
+</td>
+<td class="py-2.5 px-3 text-center">
+<span class="inline-block px-1.5 py-0.5 rounded text-[11px] font-semibold text-slate-400">0</span>
+</td>
+<td class="py-2.5 px-4">
+<div class="flex items-center gap-2">
+<div class="w-16 bg-slate-200 rounded-full h-1.5">
+<div class="bg-emerald-500 h-1.5 rounded-full" style="width: 100%"></div>
+</div>
+<span class="text-[11px] font-mono font-semibold text-emerald-600">100%</span>
+</div>
+</td>
+<td class="py-2.5 px-3 text-slate-700 font-medium">Priya S.</td>
+<td class="py-2.5 px-4 text-right space-x-1">
+<button class="px-2 py-1 text-[11px] rounded bg-blue-50 text-blue-700 hover:bg-blue-100 font-semibold border border-blue-200" onclick="openSwapPrefill('Quality Assurance')" type="button">+ Quick Swap</button>
+<button class="px-2 py-1 text-[11px] rounded bg-slate-100 text-slate-600 hover:bg-slate-200" type="button">Roster</button>
+</td>
+</tr>
+<!-- Row 8: Maintenance -->
+<tr class="hover:bg-slate-50 transition">
+<td class="py-2.5 px-4 font-semibold text-slate-900 flex items-center gap-2">
+<span class="w-3.5"></span>
+<span>Maintenance</span>
+<span class="text-[10px] font-mono text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">UTILITY</span>
+</td>
+<td class="py-2.5 px-3 text-center font-mono">18</td>
+<td class="py-2.5 px-3 text-center font-mono font-medium text-slate-700">18</td>
+<td class="py-2.5 px-3 text-center font-mono font-bold text-slate-900">16</td>
+<td class="py-2.5 px-3 text-center">
+<span class="inline-block px-2 py-0.5 rounded font-mono font-bold text-[11px] bg-red-100 text-red-700 border border-red-200">-2</span>
+</td>
+<td class="py-2.5 px-3 text-center">
+<span class="inline-block px-1.5 py-0.5 rounded text-[11px] font-semibold text-slate-400">0</span>
+</td>
+<td class="py-2.5 px-3 text-center">
+<span class="inline-block px-1.5 py-0.5 rounded text-[11px] font-semibold bg-amber-100 text-amber-800">-1</span>
+</td>
+<td class="py-2.5 px-4">
+<div class="flex items-center gap-2">
+<div class="w-16 bg-slate-200 rounded-full h-1.5">
+<div class="bg-amber-500 h-1.5 rounded-full" style="width: 88.8%"></div>
+</div>
+<span class="text-[11px] font-mono font-semibold text-slate-700">88.8%</span>
+</div>
+</td>
+<td class="py-2.5 px-3 text-slate-700 font-medium">K. Joshi</td>
+<td class="py-2.5 px-4 text-right space-x-1">
+<button class="px-2 py-1 text-[11px] rounded bg-blue-50 text-blue-700 hover:bg-blue-100 font-semibold border border-blue-200" onclick="openSwapPrefill('Maintenance')" type="button">+ Quick Swap</button>
+<button class="px-2 py-1 text-[11px] rounded bg-slate-100 text-slate-600 hover:bg-slate-200" type="button">Roster</button>
+</td>
+</tr>
+<!-- Row 9: Packaging -->
+<tr class="hover:bg-slate-50 transition">
+<td class="py-2.5 px-4 font-semibold text-slate-900 flex items-center gap-2">
+<span class="w-3.5"></span>
+<span>Packaging</span>
+<span class="text-[10px] font-mono text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">CELL-G</span>
+</td>
+<td class="py-2.5 px-3 text-center font-mono">35</td>
+<td class="py-2.5 px-3 text-center font-mono font-medium text-slate-700">35</td>
+<td class="py-2.5 px-3 text-center font-mono font-bold text-slate-900">31</td>
+<td class="py-2.5 px-3 text-center">
+<span class="inline-block px-2 py-0.5 rounded font-mono font-bold text-[11px] bg-red-100 text-red-700 border border-red-200">-4</span>
+</td>
+<td class="py-2.5 px-3 text-center">
+<span class="inline-block px-1.5 py-0.5 rounded text-[11px] font-semibold bg-emerald-100 text-emerald-800">+1</span>
+</td>
+<td class="py-2.5 px-3 text-center">
+<span class="inline-block px-1.5 py-0.5 rounded text-[11px] font-semibold text-slate-400">0</span>
+</td>
+<td class="py-2.5 px-4">
+<div class="flex items-center gap-2">
+<div class="w-16 bg-slate-200 rounded-full h-1.5">
+<div class="bg-amber-500 h-1.5 rounded-full" style="width: 88.5%"></div>
+</div>
+<span class="text-[11px] font-mono font-semibold text-slate-700">88.5%</span>
+</div>
+</td>
+<td class="py-2.5 px-3 text-slate-700 font-medium">M. Khan</td>
+<td class="py-2.5 px-4 text-right space-x-1">
+<button class="px-2 py-1 text-[11px] rounded bg-blue-50 text-blue-700 hover:bg-blue-100 font-semibold border border-blue-200" onclick="openSwapPrefill('Packaging')" type="button">+ Quick Swap</button>
+<button class="px-2 py-1 text-[11px] rounded bg-slate-100 text-slate-600 hover:bg-slate-200" type="button">Roster</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<!-- END: Section2_DepartmentAllocationTable -->
+<!-- BEGIN: Section4_SwapRequestsAndWorkflow -->
+<section class="bg-white border border-slate-200 rounded-lg shadow-xs overflow-hidden" data-purpose="approval-workflow-panel">
+<div class="border-b border-slate-200 p-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
+<div>
+<div class="flex items-center gap-2">
+<h2 class="text-sm font-bold text-slate-900 tracking-tight">Active Manpower Swap Requests &amp; Approvals Workflow</h2>
+<span class="bg-blue-100 text-blue-800 font-bold text-[10px] px-2 py-0.5 rounded-full">Multi-tier Gateway</span>
+</div>
+<p class="text-xs text-slate-500">Dual approval chain required: Releasing Cell Manager → Receiving Cell Manager → Plant Admin</p>
+</div>
+<!-- Workflow Status Tabs -->
+<div class="flex items-center space-x-1 bg-slate-100 p-1 rounded-md text-xs font-semibold overflow-x-auto">
+<button class="px-2.5 py-1 rounded bg-white text-slate-900 shadow-xs">All (14)</button>
+<button class="px-2.5 py-1 rounded text-amber-800 hover:text-slate-900 flex items-center gap-1.5">
+<span>Pending My Action</span>
+<span class="w-4 h-4 rounded-full bg-amber-500 text-white text-[9px] flex items-center justify-center font-bold">4</span>
+</button>
+<button class="px-2.5 py-1 rounded text-slate-600 hover:text-slate-900">Approved (28)</button>
+<button class="px-2.5 py-1 rounded text-slate-600 hover:text-slate-900">Rejected (2)</button>
+</div>
+</div>
+<!-- Requests Table -->
+<div class="overflow-x-auto">
+<table class="w-full text-left text-xs divide-y divide-slate-200">
+<thead class="bg-slate-50 text-slate-600 font-semibold uppercase text-[10px] tracking-wider">
+<tr>
+<th class="py-2.5 px-4">Req. ID</th>
+<th class="py-2.5 px-4">Operator / Employee</th>
+<th class="py-2.5 px-3">From Cell</th>
+<th class="py-2.5 px-3">To Cell</th>
+<th class="py-2.5 px-3">Swap Type</th>
+<th class="py-2.5 px-3">Dates</th>
+<th class="py-2.5 px-4">Approval Chain Stages</th>
+<th class="py-2.5 px-4 text-right">Action Gate</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-200 text-slate-700 bg-white">
+<!-- Request 1 -->
+<tr class="hover:bg-slate-50/80">
+<td class="py-3 px-4 font-mono font-bold text-blue-700">SWP-2026-104</td>
+<td class="py-3 px-4">
+<div class="font-semibold text-slate-900">Suresh Chauhan</div>
+<div class="text-[10px] font-mono text-slate-400">EMP-4092 · Operator Gr. II</div>
+</td>
+<td class="py-3 px-3">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-800">Quality Assurance</span>
+</td>
+<td class="py-3 px-3">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-blue-100 text-blue-800 font-semibold">Press Shop</span>
+</td>
+<td class="py-3 px-3">
+<span class="text-[10px] bg-purple-50 text-purple-700 font-bold px-2 py-0.5 rounded border border-purple-200">Shift Swap</span>
+</td>
+<td class="py-3 px-3 text-[11px] font-mono">
+                    16-Oct (Shift A)
+                  </td>
+<td class="py-3 px-4">
+<div class="flex items-center space-x-1.5 text-[10px] font-medium">
+<span class="text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded flex items-center gap-0.5 border border-emerald-200">
+<span>Priya S.</span>
+<svg class="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</span>
+<span class="text-slate-400">→</span>
+<span class="text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded flex items-center gap-0.5 border border-emerald-200">
+<span>Rajesh S.</span>
+<svg class="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</span>
+<span class="text-slate-400">→</span>
+<span class="text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded font-bold animate-pulse">Plant Admin</span>
+</div>
+</td>
+<td class="py-3 px-4 text-right space-x-1">
+<button class="px-2.5 py-1 text-xs font-semibold rounded bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs" type="button">Approve</button>
+<button class="px-2 py-1 text-xs font-semibold rounded bg-red-50 hover:bg-red-100 text-red-600 border border-red-200" type="button">Reject</button>
+</td>
+</tr>
+<!-- Request 2 -->
+<tr class="hover:bg-slate-50/80">
+<td class="py-3 px-4 font-mono font-bold text-blue-700">SWP-2026-102</td>
+<td class="py-3 px-4">
+<div class="font-semibold text-slate-900">Ganesh Shinde</div>
+<div class="text-[10px] font-mono text-slate-400">EMP-3129 · Heavy Press Helper</div>
+</td>
+<td class="py-3 px-3">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-800">Deburring</span>
+</td>
+<td class="py-3 px-3">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-blue-100 text-blue-800 font-semibold">Assembly Line 1</span>
+</td>
+<td class="py-3 px-3">
+<span class="text-[10px] bg-blue-50 text-blue-700 font-bold px-2 py-0.5 rounded border border-blue-200">Reciprocal</span>
+</td>
+<td class="py-3 px-3 text-[11px] font-mono">
+                    16-Oct to 18-Oct
+                  </td>
+<td class="py-3 px-4">
+<div class="flex items-center space-x-1.5 text-[10px] font-medium">
+<span class="text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded flex items-center gap-0.5 border border-emerald-200">
+<span>Sunita M.</span>
+<svg class="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</span>
+<span class="text-slate-400">→</span>
+<span class="text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded font-bold">R. Verma</span>
+<span class="text-slate-400">→</span>
+<span class="text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">Plant Admin</span>
+</div>
+</td>
+<td class="py-3 px-4 text-right space-x-1">
+<span class="text-[10px] text-slate-400 italic">Awaiting Dest. Manager</span>
+</td>
+</tr>
+<!-- Request 3 -->
+<tr class="hover:bg-slate-50/80">
+<td class="py-3 px-4 font-mono font-bold text-blue-700">SWP-2026-098</td>
+<td class="py-3 px-4">
+<div class="font-semibold text-slate-900">Pooja Jadhav</div>
+<div class="text-[10px] font-mono text-slate-400">EMP-9011 · Line Inspector</div>
+</td>
+<td class="py-3 px-3">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-800">Packaging</span>
+</td>
+<td class="py-3 px-3">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-blue-100 text-blue-800 font-semibold">Press Shop</span>
+</td>
+<td class="py-3 px-3">
+<span class="text-[10px] bg-slate-100 text-slate-700 font-bold px-2 py-0.5 rounded">Temporary</span>
+</td>
+<td class="py-3 px-3 text-[11px] font-mono">
+                    16-Oct (Shift A)
+                  </td>
+<td class="py-3 px-4">
+<div class="flex items-center space-x-1.5 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-1 rounded border border-emerald-200 w-fit">
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+<span>Fully Authorized &amp; Deployed</span>
+</div>
+</td>
+<td class="py-3 px-4 text-right">
+<button class="text-xs text-blue-600 hover:text-blue-800 font-semibold" type="button">View Log</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<!-- END: Section4_SwapRequestsAndWorkflow -->
+<!-- BEGIN: Section5_MonthlyCalendarMatrix -->
+<section class="bg-white border border-slate-200 rounded-lg shadow-xs p-4 space-y-4" data-purpose="monthly-shift-matrix">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+<div>
+<div class="flex items-center gap-2">
+<h2 class="text-sm font-bold text-slate-900 tracking-tight">Monthly Manpower Attendance &amp; Cell Shortage Matrix</h2>
+<span class="text-xs font-mono font-semibold bg-slate-100 text-slate-600 px-2 py-0.5 rounded">October 2026</span>
+</div>
+<p class="text-xs text-slate-500">Day-by-day cell compliance. Click any active date cell to inspect exact shift variance.</p>
+</div>
+<!-- Matrix Highlights Summary -->
+<div class="flex items-center gap-3 text-xs">
+<div class="flex items-center gap-1.5">
+<span class="w-3 h-3 rounded bg-emerald-500"></span>
+<span class="text-slate-600">Optimal (≥95%)</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="w-3 h-3 rounded bg-amber-400"></span>
+<span class="text-slate-600">Minor Deficit (85-94%)</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="w-3 h-3 rounded bg-red-500"></span>
+<span class="text-slate-600">Severe Shortage (&lt;85%)</span>
+</div>
+</div>
+</div>
+<!-- Quick Metrics Bar -->
+<div class="grid grid-cols-2 md:grid-cols-5 gap-2 text-xs bg-slate-50 p-3 rounded-lg border border-slate-200/80">
+<div>
+<span class="text-slate-500 block text-[10px] uppercase font-semibold">Planned vs Actual MTD</span>
+<span class="font-bold text-slate-800 text-sm">92.4% Avg Attendance</span>
+</div>
+<div>
+<span class="text-slate-500 block text-[10px] uppercase font-semibold">Shortage Total</span>
+<span class="font-bold text-red-600 text-sm">84 Man-Days Deficit</span>
+</div>
+<div>
+<span class="text-slate-500 block text-[10px] uppercase font-semibold">Swap In/Out Net</span>
+<span class="font-bold text-blue-600 text-sm">42 Balancing Moves</span>
+</div>
+<div>
+<span class="text-slate-500 block text-[10px] uppercase font-semibold">Overtime Authorized</span>
+<span class="font-bold text-amber-700 text-sm">148 Total Hours</span>
+</div>
+<div>
+<span class="text-slate-500 block text-[10px] uppercase font-semibold">Inspection Focus</span>
+<span class="font-bold text-slate-900 text-sm">16-Oct-2026 (Active)</span>
+</div>
+</div>
+<!-- Matrix Grid Container -->
+<div class="overflow-x-auto">
+<table class="w-full text-center text-xs border-collapse">
+<thead>
+<tr class="text-[10px] text-slate-500 font-bold uppercase border-b border-slate-200">
+<th class="text-left py-2 px-3 bg-white sticky left-0 z-10 w-36 shadow-xs">Department</th>
+<th class="p-1 font-mono">01</th>
+<th class="p-1 font-mono">02</th>
+<th class="p-1 font-mono">03</th>
+<th class="p-1 font-mono">04</th>
+<th class="p-1 font-mono">05</th>
+<th class="p-1 font-mono">06</th>
+<th class="p-1 font-mono">07</th>
+<th class="p-1 font-mono">08</th>
+<th class="p-1 font-mono">09</th>
+<th class="p-1 font-mono">10</th>
+<th class="p-1 font-mono">11</th>
+<th class="p-1 font-mono">12</th>
+<th class="p-1 font-mono">13</th>
+<th class="p-1 font-mono">14</th>
+<th class="p-1 font-mono">15</th>
+<th class="p-1 font-mono bg-blue-100 text-blue-900 rounded-t font-black">16 (Today)</th>
+<th class="p-1 font-mono text-slate-300">17</th>
+<th class="p-1 font-mono text-slate-300">18</th>
+<th class="p-1 font-mono text-slate-300">19</th>
+<th class="p-1 font-mono text-slate-300">20</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-100 font-mono text-[11px]">
+<!-- Press Shop -->
+<tr>
+<td class="text-left py-2 px-3 font-sans font-semibold text-slate-800 bg-white sticky left-0 shadow-xs">Press Shop</td>
+<td class="p-1"><span class="block py-1 rounded bg-emerald-100 text-emerald-800 font-bold">98%</span></td>
+<td class="p-1"><span class="block py-1 rounded bg-emerald-100 text-emerald-800 font-bold">95%</span></td>
+<td class="p-1"><span class="block py-1 rounded bg-amber-100 text-amber-800 font-bold">90%</span></td>
+<td class="p-1"><span class="block py-1 rounded bg-slate-100 text-slate-400">Off</span></td>
+<td class="p-1"><span class="block py-1 rounded bg-emerald-100 text-emerald-800 font-bold">100%</span></td>
+<td class="p-1"><span class="block py-1 rounded bg-emerald-100 text-emerald-800 font-bold">95%</span></td>
+<td class="p-1"><span class="block py-1 rounded bg-red-100 text-red-800 font-bold">81%</span></td>
+<td class="p-1"><span class="block py-1 rounded bg-amber-100 text-amber-800 font-bold">88%</span></td>
+<td class="p-1"><span class="block py-1 rounded bg-emerald-100 text-emerald-800 font-bold">95%</span></td>
+<td class="p-1"><span class="block py-1 rounded bg-emerald-100 text-emerald-800 font-bold">97%</span></td>
+<td class="p-1"><span class="block py-1 rounded bg-slate-100 text-slate-400">Off</span></td>
+<td class="p-1"><span class="block py-1 rounded bg-emerald-100 text-emerald-800 font-bold">93%</span></td>
+<td class="p-1"><span class="block py-1 rounded bg-emerald-100 text-emerald-800 font-bold">95%</span></td>
+<td class="p-1"><span class="block py-1 rounded bg-amber-100 text-amber-800 font-bold">88%</span></td>
+<td class="p-1"><span class="block py-1 rounded bg-amber-100 text-amber-800 font-bold">86%</span></td>
+<td class="p-1 bg-blue-50/80 font-black"><span class="block py-1 rounded bg-red-500 text-white shadow-xs">85.7%</span></td>
+<td class="p-1 text-slate-300">-</td>
+<td class="p-1 text-slate-300">-</td>
+<td class="p-1 text-slate-300">-</td>
+<td class="p-1 text-slate-300">-</td>
+</tr>
+<!-- Screw Forging -->
+<tr>
+<td class="text-left py-2 px-3 font-sans font-semibold text-slate-800 bg-white sticky left-0 shadow-xs">Screw Forging</td>
+<td class="p-1"><span class="block py-1 rounded bg-emerald-100 text-emerald-800 font-bold">100%</span></td>
+<td class="p-1"><span class="block py-1 rounded bg-emerald-100 text-emerald-800 font-bold">100%</span></td>
+<td class="p-1"><span class="block py-1 rounded bg-emerald-100 text-emerald-800 font-bold">97%</span></td>
+<td class="p-1"><span class="block py-1 rounded bg-slate-100 text-slate-400">Off</span></td>
+<td class="p-1"><span class="block py-1 rounded bg-emerald-100 text-emerald-800 font-bold">100%</span></td>
+<td class="p-1"><span class="block py-1 rounded bg-emerald-100 text-emerald-800 font-bold">100%</span></td>
+<td class="p-1"><span class="block py-1 rounded bg-emerald-100 text-emerald-800 font-bold">95%</span></td>
+<td class="p-1"><span class="block py-1 rounded bg-emerald-100 text-emerald-800 font-bold">97%</span></td>
+<td class="p-1"><span class="block py-1 rounded bg-emerald-100 text-emerald-800 font-bold">100%</span></td>
+<td class="p-1"><span class="block py-1 rounded bg-emerald-100 text-emerald-800 font-bold">100%</span></td>
+<td class="p-1"><span class="block py-1 rounded bg-slate-100 text-slate-400">Off</span></td>
+<td class="p-1"><span class="block py-1 rounded bg-emerald-100 text-emerald-800 font-bold">100%</span></td>
+<td class="p-1"><span class="block py-1 rounded bg-emerald-100 text-emerald-800 font-bold">97%</span></td>
+<td class="p-1"><span class="block py-1 rounded bg-emerald-100 text-emerald-800 font-bold">100%</span></td>
+<td class="p-1"><span class="block py-1 rounded bg-emerald-100 text-emerald-800 font-bold">97%</span></td>
+<td class="p-1 bg-blue-50/80 font-black"><span class="block py-1 rounded bg-emerald-600 text-white shadow-xs">100%</span></td>
+<td class="p-1 text-slate-300">-</td>
+<td class="p-1 text-slate-300">-</td>
+<td class="p-1 text-slate-300">-</td>
+<td class="p-1 text-slate-300">-</td>
+</tr>
+<!-- Assembly Line 1 -->
+<tr>
+<td class="text-left py-2 px-3 font-sans font-semibold text-slate-800 bg-white sticky left-0 shadow-xs">Assembly Line 1</td>
+<td class="p-1"><span class="block py-1 rounded bg-emerald-100 text-emerald-800 font-bold">94%</span></td>
+<td class="p-1"><span class="block py-1 rounded bg-amber-100 text-amber-800 font-bold">90%</span></td>
+<td class="p-1"><span class="block py-1 rounded bg-emerald-100 text-emerald-800 font-bold">96%</span></td>
+<td class="p-1"><span class="block py-1 rounded bg-slate-100 text-slate-400">Off</span></td>
+<td class="p-1"><span class="block py-1 rounded bg-amber-100 text-amber-800 font-bold">89%</span></td>
+<td class="p-1"><span class="block py-1 rounded bg-emerald-100 text-emerald-800 font-bold">95%</span></td>
+<td class="p-1"><span class="block py-1 rounded bg-amber-100 text-amber-800 font-bold">87%</span></td>
+<td class="p-1"><span class="block py-1 rounded bg-amber-100 text-amber-800 font-bold">91%</span></td>
+<td class="p-1"><span class="block py-1 rounded bg-emerald-100 text-emerald-800 font-bold">96%</span></td>
+<td class="p-1"><span class="block py-1 rounded bg-amber-100 text-amber-800 font-bold">92%</span></td>
+<td class="p-1"><span class="block py-1 rounded bg-slate-100 text-slate-400">Off</span></td>
+<td class="p-1"><span class="block py-1 rounded bg-emerald-100 text-emerald-800 font-bold">95%</span></td>
+<td class="p-1"><span class="block py-1 rounded bg-amber-100 text-amber-800 font-bold">89%</span></td>
+<td class="p-1"><span class="block py-1 rounded bg-amber-100 text-amber-800 font-bold">90%</span></td>
+<td class="p-1"><span class="block py-1 rounded bg-amber-100 text-amber-800 font-bold">88%</span></td>
+<td class="p-1 bg-blue-50/80 font-black"><span class="block py-1 rounded bg-amber-500 text-white shadow-xs">87.2%</span></td>
+<td class="p-1 text-slate-300">-</td>
+<td class="p-1 text-slate-300">-</td>
+<td class="p-1 text-slate-300">-</td>
+<td class="p-1 text-slate-300">-</td>
+</tr>
+<!-- Quality Assurance -->
+<tr>
+<td class="text-left py-2 px-3 font-sans font-semibold text-slate-800 bg-white sticky left-0 shadow-xs">Quality Assur.</td>
+<td class="p-1"><span class="block py-1 rounded bg-emerald-100 text-emerald-800 font-bold">100%</span></td>
+<td class="p-1"><span class="block py-1 rounded bg-emerald-100 text-emerald-800 font-bold">100%</span></td>
+<td class="p-1"><span class="block py-1 rounded bg-emerald-100 text-emerald-800 font-bold">100%</span></td>
+<td class="p-1"><span class="block py-1 rounded bg-slate-100 text-slate-400">Off</span></td>
+<td class="p-1"><span class="block py-1 rounded bg-emerald-100 text-emerald-800 font-bold">100%</span></td>
+<td class="p-1"><span class="block py-1 rounded bg-emerald-100 text-emerald-800 font-bold">95%</span></td>
+<td class="p-1"><span class="block py-1 rounded bg-emerald-100 text-emerald-800 font-bold">100%</span></td>
+<td class="p-1"><span class="block py-1 rounded bg-emerald-100 text-emerald-800 font-bold">100%</span></td>
+<td class="p-1"><span class="block py-1 rounded bg-emerald-100 text-emerald-800 font-bold">100%</span></td>
+<td class="p-1"><span class="block py-1 rounded bg-emerald-100 text-emerald-800 font-bold">95%</span></td>
+<td class="p-1"><span class="block py-1 rounded bg-slate-100 text-slate-400">Off</span></td>
+<td class="p-1"><span class="block py-1 rounded bg-emerald-100 text-emerald-800 font-bold">100%</span></td>
+<td class="p-1"><span class="block py-1 rounded bg-emerald-100 text-emerald-800 font-bold">100%</span></td>
+<td class="p-1"><span class="block py-1 rounded bg-emerald-100 text-emerald-800 font-bold">100%</span></td>
+<td class="p-1"><span class="block py-1 rounded bg-emerald-100 text-emerald-800 font-bold">100%</span></td>
+<td class="p-1 bg-blue-50/80 font-black"><span class="block py-1 rounded bg-emerald-600 text-white shadow-xs">100%</span></td>
+<td class="p-1 text-slate-300">-</td>
+<td class="p-1 text-slate-300">-</td>
+<td class="p-1 text-slate-300">-</td>
+<td class="p-1 text-slate-300">-</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<!-- END: Section5_MonthlyCalendarMatrix -->
+</div>
+</main>
+<!-- END: MainContentArea -->
+<!-- BEGIN: Section3_InteractiveSwapModalDrawer -->
+<!-- Drawer / Modal Overlay -->
+<div class="fixed inset-0 bg-slate-900/60 z-50 backdrop-blur-xs hidden transition-opacity flex justify-end" id="swapDrawerOverlay">
+<!-- Right Slide-in Panel -->
+<aside class="w-full max-w-lg bg-white h-full shadow-2xl flex flex-col justify-between overflow-hidden transform transition-all duration-300" data-purpose="swap-request-form-drawer">
+<!-- Drawer Header -->
+<div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between border-b border-slate-800">
+<div>
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-blue-500"></span>
+<h3 class="text-sm font-bold tracking-tight">Request Manpower Shift Swap</h3>
+</div>
+<p class="text-[11px] text-slate-400 mt-0.5">Automated impact analysis will run prior to manager signoff</p>
+</div>
+<button class="text-slate-400 hover:text-white p-1 rounded-md" id="closeDrawerBtn" type="button">
+<svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</button>
+</div>
+<!-- Form Fields Scroll Area -->
+<form class="p-6 space-y-4 overflow-y-auto flex-1 text-xs" id="swapForm">
+<!-- Source & Destination Cells -->
+<div class="grid grid-cols-2 gap-3">
+<div>
+<label class="block font-semibold text-slate-700 uppercase text-[10px] tracking-wider mb-1">Releasing Cell (From)</label>
+<select class="w-full rounded border-slate-300 py-1.5 text-xs focus:ring-blue-500 focus:border-blue-500 font-medium" id="sourceDeptSelect">
+<option selected="" value="Quality Assurance">Quality Assurance</option>
+<option value="Screw Forging">Screw Forging</option>
+<option value="Deburring">Deburring</option>
+<option value="Maintenance">Maintenance</option>
+<option value="Laser Marking">Laser Marking</option>
+</select>
+</div>
+<div>
+<label class="block font-semibold text-slate-700 uppercase text-[10px] tracking-wider mb-1">Receiving Cell (To)</label>
+<select class="w-full rounded border-slate-300 py-1.5 text-xs focus:ring-blue-500 focus:border-blue-500 font-medium" id="destDeptSelect">
+<option selected="" value="Press Shop">Press Shop (Deficit: -6)</option>
+<option value="Assembly Line 1">Assembly Line 1 (Deficit: -7)</option>
+<option value="Grooving">Grooving (Deficit: -4)</option>
+<option value="Packaging">Packaging (Deficit: -4)</option>
+</select>
+</div>
+</div>
+<!-- Employee Selector -->
+<div>
+<label class="block font-semibold text-slate-700 uppercase text-[10px] tracking-wider mb-1">Employee to Transfer / Swap</label>
+<select class="w-full rounded border-slate-300 py-1.5 text-xs focus:ring-blue-500 focus:border-blue-500 font-medium">
+<option>EMP-4092 - Suresh Chauhan (Operator Grade II - Press Qualified)</option>
+<option>EMP-5512 - Rahul Sharma (QC Senior Tech)</option>
+<option>EMP-6731 - Vinod Gupta (General Operator)</option>
+</select>
+</div>
+<!-- Replacement Employee (Optional) -->
+<div>
+<label class="block font-semibold text-slate-700 uppercase text-[10px] tracking-wider mb-1">
+              Reciprocal Replacement <span class="text-slate-400 font-normal">(Optional for 1-way borrow)</span>
+</label>
+<select class="w-full rounded border-slate-300 py-1.5 text-xs focus:ring-blue-500 focus:border-blue-500 font-medium">
+<option value="">-- No Reciprocal Employee (Single Direction Move) --</option>
+<option>EMP-8102 - Anil Gaikwad (Helper)</option>
+<option>EMP-1904 - Manoj Shrestha (Trainee)</option>
+</select>
+</div>
+<!-- Swap Type Pills -->
+<div>
+<label class="block font-semibold text-slate-700 uppercase text-[10px] tracking-wider mb-1.5">Swap Arrangement Type</label>
+<div class="grid grid-cols-3 gap-2">
+<label class="flex items-center justify-center p-2 rounded border border-blue-600 bg-blue-50/70 text-blue-800 font-bold cursor-pointer text-[11px] text-center">
+<input checked="" class="sr-only" name="swapType" type="radio"/>
+<span>Temporary (1-Day)</span>
+</label>
+<label class="flex items-center justify-center p-2 rounded border border-slate-200 hover:border-slate-300 text-slate-700 font-medium cursor-pointer text-[11px] text-center">
+<input class="sr-only" name="swapType" type="radio"/>
+<span>Reciprocal Swap</span>
+</label>
+<label class="flex items-center justify-center p-2 rounded border border-slate-200 hover:border-slate-300 text-slate-700 font-medium cursor-pointer text-[11px] text-center">
+<input class="sr-only" name="swapType" type="radio"/>
+<span>Multi-Day / Roster</span>
+</label>
+</div>
+</div>
+<!-- Date & Shift Allocation -->
+<div class="grid grid-cols-2 gap-3">
+<div>
+<label class="block font-semibold text-slate-700 uppercase text-[10px] tracking-wider mb-1">Effective Date</label>
+<input class="w-full rounded border-slate-300 py-1.5 text-xs focus:ring-blue-500 font-medium" type="date" value="2026-10-16"/>
+</div>
+<div>
+<label class="block font-semibold text-slate-700 uppercase text-[10px] tracking-wider mb-1">Applicable Shift</label>
+<select class="w-full rounded border-slate-300 py-1.5 text-xs focus:ring-blue-500 font-medium">
+<option>Shift A (06:45 AM - 02:45 PM)</option>
+<option>Shift B (02:45 PM - 10:45 PM)</option>
+<option>Shift C (10:45 PM - 06:45 AM)</option>
+</select>
+</div>
+</div>
+<!-- Reason & Criticality -->
+<div>
+<label class="block font-semibold text-slate-700 uppercase text-[10px] tracking-wider mb-1">Operational Justification</label>
+<select class="w-full rounded border-slate-300 py-1.5 text-xs focus:ring-blue-500 font-medium mb-2">
+<option>Line stoppage prevention / Die punch bottleneck</option>
+<option>Critical customer delivery expedited</option>
+<option>Absenteeism compensation</option>
+<option>Emergency breakdown maintenance support</option>
+</select>
+<textarea class="w-full rounded border-slate-300 text-xs focus:ring-blue-500 focus:border-blue-500 placeholder-slate-400" placeholder="Provide extra notes or specific press assignment..." rows="2"></textarea>
+</div>
+<!-- Live Staffing Impact Preview Widget -->
+<div class="bg-slate-50 border border-slate-200 rounded-lg p-3 space-y-2">
+<span class="text-[10px] font-bold uppercase tracking-wider text-slate-700 block">Live Projected Staffing Impact</span>
+<div class="grid grid-cols-2 gap-3 text-xs">
+<div class="bg-white p-2 rounded border border-slate-200">
+<div class="font-semibold text-slate-800">Quality Assurance</div>
+<div class="text-[10px] text-slate-500 mt-0.5">Source Department</div>
+<div class="mt-2 flex items-center justify-between font-mono">
+<span class="text-slate-500">22 (100%)</span>
+<span class="text-slate-400">→</span>
+<span class="font-bold text-emerald-700 bg-emerald-50 px-1 rounded">21 (95.4%)</span>
+</div>
+<span class="text-[9px] text-emerald-600 block mt-1 font-semibold">✓ Within safe buffer limits</span>
+</div>
+<div class="bg-white p-2 rounded border border-blue-200 bg-blue-50/20">
+<div class="font-semibold text-slate-800">Press Shop</div>
+<div class="text-[10px] text-blue-600 mt-0.5">Destination Cell</div>
+<div class="mt-2 flex items-center justify-between font-mono">
+<span class="text-red-600">36 (85.7%)</span>
+<span class="text-slate-400">→</span>
+<span class="font-bold text-blue-700 bg-blue-100 px-1 rounded">37 (88.1%)</span>
+</div>
+<span class="text-[9px] text-blue-700 block mt-1 font-semibold">↑ Deficit decreased to -5</span>
+</div>
+</div>
+</div>
+</form>
+<!-- Drawer Footer / Actions -->
+<div class="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-3">
+<button class="px-4 py-2 text-xs font-semibold rounded bg-white hover:bg-slate-100 text-slate-700 border border-slate-300" id="cancelDrawerBtn" type="button">
+            Cancel
+          </button>
+<div class="flex items-center gap-2">
+<button class="px-3 py-2 text-xs font-semibold rounded bg-slate-200 hover:bg-slate-300 text-slate-700" type="button">
+              Save Draft
+            </button>
+<button class="px-4 py-2 text-xs font-semibold rounded bg-blue-600 hover:bg-blue-700 text-white shadow-sm flex items-center gap-1.5" id="submitSwapBtn" type="button">
+<span>Submit for Approval</span>
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M14 5l7 7m0 0l-7 7m7-7H3" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</button>
+</div>
+</div>
+</aside>
+</div>
+<!-- END: Section3_InteractiveSwapModalDrawer -->
+</div>
+<!-- BEGIN: InteractiveScripts -->
+<script data-purpose="dashboard-interactions">
+    document.addEventListener('DOMContentLoaded', () => {
+      // 1. Toggle Sub-Row for Press Shop Machines
+      const togglePressShopBtn = document.getElementById('togglePressShopBtn');
+      const pressShopDetailRow = document.getElementById('pressShopDetailRow');
+      const pressShopChevron = document.getElementById('pressShopChevron');
+
+      if (togglePressShopBtn && pressShopDetailRow) {
+        togglePressShopBtn.addEventListener('click', () => {
+          pressShopDetailRow.classList.toggle('hidden');
+          pressShopChevron.classList.toggle('rotate-90');
+        });
+      }
+
+      // 2. Open / Close Swap Request Drawer
+      const openSwapModalBtn = document.getElementById('openSwapModalBtn');
+      const closeDrawerBtn = document.getElementById('closeDrawerBtn');
+      const cancelDrawerBtn = document.getElementById('cancelDrawerBtn');
+      const swapDrawerOverlay = document.getElementById('swapDrawerOverlay');
+      const submitSwapBtn = document.getElementById('submitSwapBtn');
+
+      function openDrawer() {
+        if (swapDrawerOverlay) {
+          swapDrawerOverlay.classList.remove('hidden');
+        }
+      }
+
+      function closeDrawer() {
+        if (swapDrawerOverlay) {
+          swapDrawerOverlay.classList.add('hidden');
+        }
+      }
+
+      if (openSwapModalBtn) openSwapModalBtn.addEventListener('click', openDrawer);
+      if (closeDrawerBtn) closeDrawerBtn.addEventListener('click', closeDrawer);
+      if (cancelDrawerBtn) cancelDrawerBtn.addEventListener('click', closeDrawer);
+
+      // Close on backdrop click
+      if (swapDrawerOverlay) {
+        swapDrawerOverlay.addEventListener('click', (e) => {
+          if (e.target === swapDrawerOverlay) {
+            closeDrawer();
+          }
+        });
+      }
+
+      // 3. Quick Swap Button from table row helper
+      window.openSwapPrefill = function(deptName) {
+        openDrawer();
+        const destSelect = document.getElementById('destDeptSelect');
+        if (destSelect) {
+          for (let i = 0; i < destSelect.options.length; i++) {
+            if (destSelect.options[i].text.includes(deptName)) {
+              destSelect.selectedIndex = i;
+              break;
+            }
+          }
+        }
+      };
+
+      // 4. Submit notification mock
+      if (submitSwapBtn) {
+        submitSwapBtn.addEventListener('click', () => {
+          alert('Swap request submitted successfully! A notification was dispatched to Cell Managers for dual-signoff.');
+          closeDrawer();
+        });
+      }
+
+      // 5. Search Filter on Department Table
+      const searchInput = document.getElementById('deptSearchInput');
+      const tableBody = document.getElementById('departmentTableBody');
+
+      if (searchInput && tableBody) {
+        searchInput.addEventListener('input', (e) => {
+          const val = e.target.value.toLowerCase().trim();
+          const rows = tableBody.querySelectorAll('tr:not(#pressShopDetailRow)');
+          
+          rows.forEach(row => {
+            const text = row.innerText.toLowerCase();
+            if (text.includes(val)) {
+              row.style.display = '';
+            } else {
+              row.style.display = 'none';
+            }
+          });
+        });
+      }
+    });
+  </script>
+<!-- END: InteractiveScripts -->
+</body></html>

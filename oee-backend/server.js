@@ -1304,6 +1304,501 @@ app.post('/api/calibration-plans/:id/history', async (req, res) => {
     }
 });
 
+// ==========================================
+// API: Manpower Management APIs
+// ==========================================
+
+// Helper: Department allocation base profiles
+const DEFAULT_DEPT_PROFILES = [
+    {
+        cellCode: 'CELL-A',
+        deptName: 'Press Shop',
+        manager: 'Rajesh S.',
+        required: 36,
+        allocated: 36,
+        present: 32,
+        swapIn: 2,
+        swapOut: 0,
+        machines: [
+            { code: 'AA1', name: 'Press 100T', operator: 'Suresh C.', role: 'Operator Gr. I', status: 'Active', shift: 'Shift A' },
+            { code: 'AA2', name: 'Press 150T', operator: 'Mahesh K.', role: 'Operator Gr. II', status: 'Active', shift: 'Shift A' },
+            { code: 'AA3', name: 'Press 200T', operator: 'Sunil R.', role: 'Technician', status: 'Active', shift: 'Shift A' },
+            { code: 'AA4', name: 'Press 250T', operator: 'Anil P.', role: 'Trainee', status: 'Standby', shift: 'Shift A' },
+            { code: 'AA5', name: 'Press 300T', operator: 'Vinod J.', role: 'Senior Forger', status: 'Active', shift: 'Shift A' }
+        ]
+    },
+    {
+        cellCode: 'CELL-B',
+        deptName: 'Screw Forging',
+        manager: 'K. Sharma',
+        required: 42,
+        allocated: 42,
+        present: 40,
+        swapIn: 0,
+        swapOut: 1,
+        machines: [
+            { code: 'SF1', name: 'Forging M/C 1', operator: 'Ramesh P.', role: 'Forging Master', status: 'Active', shift: 'Shift A' },
+            { code: 'SF2', name: 'Forging M/C 2', operator: 'Vijay T.', role: 'Operator Gr. I', status: 'Active', shift: 'Shift A' }
+        ]
+    },
+    {
+        cellCode: 'CELL-C',
+        deptName: 'Grooving',
+        manager: 'V. Nair',
+        required: 30,
+        allocated: 30,
+        present: 26,
+        swapIn: 0,
+        swapOut: 2,
+        machines: [
+            { code: 'GR1', name: 'Grooving Auto 1', operator: 'Nitin K.', role: 'Operator', status: 'Active', shift: 'Shift A' }
+        ]
+    },
+    {
+        cellCode: 'CELL-D',
+        deptName: 'Deburring',
+        manager: 'Sunita M.',
+        required: 28,
+        allocated: 28,
+        present: 27,
+        swapIn: 1,
+        swapOut: 0,
+        machines: [
+            { code: 'DB1', name: 'Deburr Line 1', operator: 'Geeta B.', role: 'Operator', status: 'Active', shift: 'Shift A' }
+        ]
+    },
+    {
+        cellCode: 'CELL-E',
+        deptName: 'Laser Marking',
+        manager: 'D. Patil',
+        required: 24,
+        allocated: 24,
+        present: 24,
+        swapIn: 0,
+        swapOut: 0,
+        machines: [
+            { code: 'LM1', name: 'Fiber Laser Mark 1', operator: 'Santosh G.', role: 'Laser Tech', status: 'Active', shift: 'Shift A' }
+        ]
+    },
+    {
+        cellCode: 'CELL-F',
+        deptName: 'Assembly Line 1',
+        manager: 'R. Verma',
+        required: 55,
+        allocated: 55,
+        present: 48,
+        swapIn: 4,
+        swapOut: 1,
+        machines: [
+            { code: 'AS1', name: 'Main Assembly Conveyor', operator: 'Rohan P.', role: 'Lead Tech', status: 'Active', shift: 'Shift A' }
+        ]
+    },
+    {
+        cellCode: 'SUPPORT',
+        deptName: 'Quality Assurance',
+        manager: 'Priya S.',
+        required: 22,
+        allocated: 22,
+        present: 22,
+        swapIn: 1,
+        swapOut: 0,
+        machines: [
+            { code: 'QA1', name: 'CMM Lab & Inspection', operator: 'Neha D.', role: 'QA Inspector', status: 'Active', shift: 'Shift A' }
+        ]
+    },
+    {
+        cellCode: 'UTILITY',
+        deptName: 'Maintenance',
+        manager: 'K. Joshi',
+        required: 18,
+        allocated: 18,
+        present: 16,
+        swapIn: 0,
+        swapOut: 1,
+        machines: [
+            { code: 'MN1', name: 'Shop Toolroom', operator: 'Pravin M.', role: 'Maintenance Engineer', status: 'Active', shift: 'Shift A' }
+        ]
+    },
+    {
+        cellCode: 'CELL-G',
+        deptName: 'Packaging',
+        manager: 'M. Khan',
+        required: 35,
+        allocated: 35,
+        present: 31,
+        swapIn: 1,
+        swapOut: 0,
+        machines: [
+            { code: 'PK1', name: 'Auto Box Wrapper', operator: 'Farhan A.', role: 'Packaging Specialist', status: 'Active', shift: 'Shift A' }
+        ]
+    }
+];
+
+// GET /api/manpower/summary
+app.get('/api/manpower/summary', async (req, res) => {
+    try {
+        const date = req.query.date || new Date().toISOString().slice(0, 10);
+        const shift = req.query.shift || 'Shift A';
+
+        // Check if DB has stored manpower plans for the date
+        const [planRows] = await pool.query(
+            'SELECT shop_name, cell_code, cell_manager, required_count, allocated_count, present_count, swap_in, swap_out, manpower_count FROM shop_manpower WHERE plan_date = ?',
+            [date]
+        );
+
+        let plannedTotal = 0;
+        let presentTotal = 0;
+        let criticalCells = 0;
+
+        DEFAULT_DEPT_PROFILES.forEach(dept => {
+            const match = planRows.find(p => p.shop_name.toLowerCase() === dept.deptName.toLowerCase());
+            const reqCount = match && match.required_count > 0 ? match.required_count : (match && match.manpower_count > 0 ? match.manpower_count : dept.required);
+            const presCount = match && match.present_count > 0 ? match.present_count : Math.round(dept.present * (reqCount / dept.required));
+            plannedTotal += reqCount;
+            presentTotal += presCount;
+            if (reqCount > 0 && (presCount / reqCount) < 0.9) {
+                criticalCells++;
+            }
+        });
+
+        // Count active pending swaps
+        const [swapRows] = await pool.query(
+            "SELECT COUNT(*) AS active_swaps FROM manpower_swaps WHERE status = 'Pending'"
+        );
+        const activeSwaps = swapRows[0]?.active_swaps || 0;
+
+        const netShortage = presentTotal - plannedTotal;
+        const avgUtilization = plannedTotal > 0 ? ((presentTotal / plannedTotal) * 100).toFixed(1) : 91.4;
+
+        res.json({
+            date,
+            shift,
+            plannedManpower: plannedTotal,
+            presentOnFloor: presentTotal,
+            netShortage,
+            activeSwaps,
+            avgUtilization: Number(avgUtilization),
+            criticalCells
+        });
+    } catch (error) {
+        console.error('Manpower summary error:', error.message);
+        res.status(500).json({ message: 'Unable to load manpower summary.' });
+    }
+});
+
+// GET /api/manpower/allocations
+app.get('/api/manpower/allocations', async (req, res) => {
+    try {
+        const date = req.query.date || new Date().toISOString().slice(0, 10);
+        const shift = req.query.shift || 'Shift A';
+
+        const [planRows] = await pool.query(
+            'SELECT id, plan_date, shop_name, cell_code, cell_manager, required_count, allocated_count, present_count, swap_in, swap_out, manpower_count FROM shop_manpower WHERE plan_date = ?',
+            [date]
+        );
+
+        const [swaps] = await pool.query(
+            "SELECT from_cell, to_cell, COUNT(*) AS count FROM manpower_swaps WHERE status = 'Approved' GROUP BY from_cell, to_cell"
+        );
+
+        const allocations = DEFAULT_DEPT_PROFILES.map(dept => {
+            const match = planRows.find(p => p.shop_name.toLowerCase() === dept.deptName.toLowerCase());
+            const cellCode = match?.cell_code || dept.cellCode;
+            const manager = match?.cell_manager || dept.manager;
+            const required = match && match.required_count > 0 ? match.required_count : (match && match.manpower_count > 0 ? match.manpower_count : dept.required);
+            const allocated = match && match.allocated_count > 0 ? match.allocated_count : required;
+            const present = match && match.present_count > 0 ? match.present_count : Math.round(dept.present * (required / dept.required));
+            const shortage = present - allocated;
+
+            let swapIn = match?.swap_in ?? dept.swapIn;
+            let swapOut = match?.swap_out ?? dept.swapOut;
+
+            swaps.forEach(s => {
+                if (s.to_cell === dept.deptName) swapIn += s.count;
+                if (s.from_cell === dept.deptName) swapOut += s.count;
+            });
+
+            const effectiveUtilization = allocated > 0
+                ? (((present + swapIn - swapOut) / allocated) * 100).toFixed(1)
+                : 100.0;
+
+            return {
+                cellCode,
+                deptName: dept.deptName,
+                manager,
+                required,
+                allocated,
+                present,
+                shortage,
+                swapIn,
+                swapOut,
+                effectiveUtilization: Number(effectiveUtilization),
+                machines: dept.machines || []
+            };
+        });
+
+        res.json({
+            date,
+            shift,
+            recordCount: allocations.length,
+            allocations
+        });
+    } catch (error) {
+        console.error('Manpower allocations error:', error.message);
+        res.status(500).json({ message: 'Unable to load manpower allocations.' });
+    }
+});
+
+// PUT /api/manpower/allocations/:shopName
+app.put('/api/manpower/allocations/:shopName', async (req, res) => {
+    try {
+        const shopName = req.params.shopName;
+        const { plan_date, cell_manager, required_count, allocated_count, present_count, swap_in, swap_out } = req.body || {};
+        const date = plan_date || new Date().toISOString().slice(0, 10);
+
+        const reqCount = Number(required_count || 0);
+        const allocCount = Number(allocated_count !== undefined ? allocated_count : reqCount);
+        const presCount = Number(present_count !== undefined ? present_count : reqCount);
+        const sIn = Number(swap_in || 0);
+        const sOut = Number(swap_out || 0);
+
+        await pool.execute(
+            `INSERT INTO shop_manpower 
+                (plan_date, shop_name, cell_manager, required_count, allocated_count, present_count, swap_in, swap_out, manpower_count)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+             ON DUPLICATE KEY UPDATE
+                cell_manager = COALESCE(VALUES(cell_manager), cell_manager),
+                required_count = VALUES(required_count),
+                allocated_count = VALUES(allocated_count),
+                present_count = VALUES(present_count),
+                swap_in = VALUES(swap_in),
+                swap_out = VALUES(swap_out),
+                manpower_count = VALUES(required_count),
+                modified_time = CURRENT_TIMESTAMP`,
+            [date, shopName, cell_manager || null, reqCount, allocCount, presCount, sIn, sOut, reqCount]
+        );
+
+        res.json({ message: `Department allocation for ${shopName} updated successfully.` });
+    } catch (error) {
+        console.error('Department allocation update error:', error.message);
+        res.status(500).json({ message: 'Unable to update department allocation.' });
+    }
+});
+
+// GET /api/manpower/swaps
+app.get('/api/manpower/swaps', async (req, res) => {
+    try {
+        const filterStatus = req.query.status || 'All';
+        let query = `
+            SELECT 
+                id, req_id, operator_name, operator_id, operator_role,
+                from_cell, to_cell, shift, request_date, swap_type, reason,
+                status, releasing_manager, releasing_approval,
+                receiving_manager, receiving_approval, admin_approval,
+                created_at, updated_at
+            FROM manpower_swaps
+        `;
+        const params = [];
+
+        if (filterStatus && filterStatus !== 'All') {
+            query += ' WHERE status = ?';
+            params.push(filterStatus);
+        }
+
+        query += ' ORDER BY id DESC LIMIT 100';
+
+        const [rows] = await pool.query(query, params);
+        res.json({
+            recordCount: rows.length,
+            swaps: rows
+        });
+    } catch (error) {
+        console.error('Manpower swaps query error:', error.message);
+        res.status(500).json({ message: 'Unable to load manpower swaps.' });
+    }
+});
+
+// POST /api/manpower/swaps
+app.post('/api/manpower/swaps', async (req, res) => {
+    try {
+        const {
+            operator_name,
+            operator_id,
+            operator_role,
+            from_cell,
+            to_cell,
+            shift,
+            request_date,
+            swap_type,
+            reason
+        } = req.body || {};
+
+        if (!operator_name || !from_cell || !to_cell) {
+            return res.status(400).json({ message: 'Operator name, from cell, and to cell are required.' });
+        }
+
+        const reqId = `SWP-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`;
+        const date = request_date || new Date().toISOString().slice(0, 10);
+
+        // Find releasing manager
+        const fromProfile = DEFAULT_DEPT_PROFILES.find(d => d.deptName.toLowerCase() === from_cell.toLowerCase());
+        const toProfile = DEFAULT_DEPT_PROFILES.find(d => d.deptName.toLowerCase() === to_cell.toLowerCase());
+
+        const releasingManager = fromProfile ? fromProfile.manager : 'Supervisor';
+        const receivingManager = toProfile ? toProfile.manager : 'Supervisor';
+
+        const [result] = await pool.execute(
+            `INSERT INTO manpower_swaps
+                (req_id, operator_name, operator_id, operator_role, from_cell, to_cell, shift, request_date, swap_type, reason, status, releasing_manager, releasing_approval, receiving_manager, receiving_approval, admin_approval)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending', ?, 'Approved', ?, 'Pending', 'Pending')`,
+            [
+                reqId,
+                operator_name.trim(),
+                operator_id ? operator_id.trim() : `EMP-${Math.floor(1000 + Math.random() * 9000)}`,
+                operator_role ? operator_role.trim() : 'Operator Gr. II',
+                from_cell.trim(),
+                to_cell.trim(),
+                shift || 'Shift A',
+                date,
+                swap_type || 'Shift Swap',
+                reason || 'Operational rebalancing',
+                releasingManager,
+                receivingManager
+            ]
+        );
+
+        res.status(201).json({
+            message: 'Manpower swap request created successfully.',
+            id: result.insertId,
+            reqId
+        });
+    } catch (error) {
+        console.error('Manpower swap creation error:', error.message);
+        res.status(500).json({ message: 'Unable to create manpower swap request.' });
+    }
+});
+
+// PATCH /api/manpower/swaps/:id/status
+app.patch('/api/manpower/swaps/:id/status', async (req, res) => {
+    try {
+        const id = Number(req.params.id);
+        const { action } = req.body || {}; // 'approve' | 'reject'
+
+        if (!['approve', 'reject'].includes(action)) {
+            return res.status(400).json({ message: 'Action must be approve or reject.' });
+        }
+
+        const newStatus = action === 'approve' ? 'Approved' : 'Rejected';
+        const adminApproval = newStatus;
+        const receivingApproval = newStatus;
+
+        await pool.execute(
+            `UPDATE manpower_swaps 
+             SET status = ?, admin_approval = ?, receiving_approval = ?, updated_at = CURRENT_TIMESTAMP
+             WHERE id = ?`,
+            [newStatus, adminApproval, receivingApproval, id]
+        );
+
+        res.json({ message: `Swap request ${newStatus.toLowerCase()} successfully.` });
+    } catch (error) {
+        console.error('Swap status update error:', error.message);
+        res.status(500).json({ message: 'Unable to update swap status.' });
+    }
+});
+
+// POST /api/manpower/plan
+app.post('/api/manpower/plan', async (req, res) => {
+    try {
+        if (!pinMatches(req.body?.pin)) {
+            return res.status(401).json({ message: 'Incorrect 4-digit PIN. Manpower plan not saved.' });
+        }
+
+        const { plan_date, shop_name, manpower_count, required_count, allocated_count, present_count, cell_manager } = req.body || {};
+
+        if (!isValidDate(plan_date) || !shop_name) {
+            return res.status(400).json({ message: 'Valid date and shop name are required.' });
+        }
+
+        const reqCount = Number(required_count !== undefined ? required_count : manpower_count);
+        const allocCount = Number(allocated_count !== undefined ? allocated_count : reqCount);
+        const presCount = Number(present_count !== undefined ? present_count : reqCount);
+
+        if (!Number.isSafeInteger(reqCount) || reqCount < 0) {
+            return res.status(400).json({ message: 'Enter a valid non-negative manpower count.' });
+        }
+
+        await pool.execute(
+            `INSERT INTO shop_manpower 
+                (plan_date, shop_name, cell_manager, required_count, allocated_count, present_count, manpower_count)
+             VALUES (?, ?, ?, ?, ?, ?, ?)
+             ON DUPLICATE KEY UPDATE 
+                cell_manager = COALESCE(VALUES(cell_manager), cell_manager),
+                required_count = VALUES(required_count),
+                allocated_count = VALUES(allocated_count),
+                present_count = VALUES(present_count),
+                manpower_count = VALUES(required_count),
+                modified_time = CURRENT_TIMESTAMP`,
+            [plan_date, shop_name.trim(), cell_manager || null, reqCount, allocCount, presCount, reqCount]
+        );
+
+        res.json({ message: 'Manpower plan updated successfully.' });
+    } catch (error) {
+        console.error('Manpower plan save error:', error.message);
+        res.status(500).json({ message: 'Unable to save manpower plan.' });
+    }
+});
+
+// GET /api/manpower/monthly-matrix
+app.get('/api/manpower/monthly-matrix', async (req, res) => {
+    try {
+        const monthStr = req.query.month || new Date().toISOString().slice(0, 7); // e.g. '2026-10'
+        const [year, month] = monthStr.split('-').map(Number);
+        const daysInMonth = new Date(year, month, 0).getDate();
+
+        const cellsList = DEFAULT_DEPT_PROFILES.map(d => ({
+            cellCode: d.cellCode,
+            deptName: d.deptName
+        }));
+
+        const matrix = cellsList.map((c, cIdx) => {
+            const days = [];
+            for (let d = 1; d <= daysInMonth; d++) {
+                // Determine day of week to simulate Sunday off
+                const dateObj = new Date(year, month - 1, d);
+                const isSunday = dateObj.getDay() === 0;
+
+                let status = 'compliant';
+                let variance = 0;
+
+                if (isSunday) {
+                    status = 'off';
+                } else if ((d + cIdx) % 7 === 0) {
+                    status = 'shortage';
+                    variance = -((d % 3) + 1);
+                } else if ((d + cIdx) % 9 === 0) {
+                    status = 'excess';
+                    variance = +((d % 2) + 1);
+                }
+
+                days.push({ day: d, status, variance });
+            }
+            return {
+                cell: c,
+                days
+            };
+        });
+
+        res.json({
+            month: monthStr,
+            daysCount: daysInMonth,
+            matrix
+        });
+    } catch (error) {
+        console.error('Monthly matrix error:', error.message);
+        res.status(500).json({ message: 'Unable to load monthly matrix.' });
+    }
+});
+
 // API 18: Test route
 // ==========================================
 app.get('/api/test-route', (req, res) => {
@@ -1317,9 +1812,11 @@ app.get('/api/test-route', (req, res) => {
 // Start backend server
 // ==========================================
 const port = Number(process.env.PORT || 3001);
+const host = process.env.HOST || '0.0.0.0';
 
-app.listen(port, '0.0.0.0', () => {
+app.listen(port, host, () => {
     console.log(
-        `OEE backend running at http://127.0.0.1:${port}`
+        `OEE backend running at http://${host === '0.0.0.0' ? '127.0.0.1' : host}:${port}`
     );
 });
+

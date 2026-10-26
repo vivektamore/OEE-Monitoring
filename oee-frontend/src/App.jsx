@@ -1,6 +1,9 @@
 
 import { useEffect, useState } from 'react'
 import './App.css'
+import ManpowerManagement from './components/ManpowerManagement'
+
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001'
 
 const cells = [
   { id: 'A', name: 'Press Shop', machines: 10, oee: 78.4 },
@@ -268,7 +271,7 @@ function App() {
         }
 
         const response = await fetch(
-          `http://192.168.8.163:3001/api/production-trend?${params.toString()}`
+          `${API_BASE_URL}/api/production-trend?${params.toString()}`
         )
 
         const result = await response.json()
@@ -374,7 +377,7 @@ function App() {
           machine: hourlyLiveMachine.trim(),
         })
         const response = await fetch(
-          `http://192.168.8.163:3001/api/hourly-data?${params.toString()}`
+          `${API_BASE_URL}/api/hourly-data?${params.toString()}`
         )
         const result = await response.json()
         if (!response.ok) {
@@ -422,7 +425,7 @@ function App() {
 
         // Keep using the existing daily comparison API.
         const response = await fetch(
-          `http://192.168.8.163:3001/api/plan-vs-actual?${params.toString()}`
+          `${API_BASE_URL}/api/plan-vs-actual?${params.toString()}`
         )
         const result = await response.json()
         if (!response.ok) {
@@ -431,7 +434,7 @@ function App() {
 
         // Use the existing hourly-data API for runtime and production by hour.
         const hourlyResponse = await fetch(
-          `http://192.168.8.163:3001/api/hourly-data?${params.toString()}`
+          `${API_BASE_URL}/api/hourly-data?${params.toString()}`
         )
         const hourlyResult = await hourlyResponse.json()
         if (!hourlyResponse.ok) {
@@ -462,7 +465,7 @@ function App() {
     let cancelled = false
     async function loadPlans() {
       try {
-        const response = await fetch(`http://192.168.8.163:3001/api/production-plans?date=${encodeURIComponent(planDate)}`)
+        const response = await fetch(`${API_BASE_URL}/api/production-plans?date=${encodeURIComponent(planDate)}`)
         const result = await response.json()
         if (!response.ok) throw new Error(result.message || 'Unable to load plans.')
         if (!cancelled) setPlanRows(result.data || [])
@@ -483,7 +486,7 @@ function App() {
     setPlanMessage('')
     setPlanMessageError(false)
     try {
-      const response = await fetch('http://192.168.8.163:3001/api/production-plan/verify-pin', {
+      const response = await fetch(`${API_BASE_URL}/api/production-plan/verify-pin`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pin: planPin }),
@@ -512,7 +515,7 @@ function App() {
     setPlanMessage('')
     setPlanMessageError(false)
     try {
-      const response = await fetch('http://192.168.8.163:3001/api/production-plans', {
+      const response = await fetch(`${API_BASE_URL}/api/production-plans`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -526,7 +529,7 @@ function App() {
       const result = await response.json()
       if (!response.ok) throw new Error(result.message || 'Unable to save plan.')
       setPlanMessage(result.message || 'Plan saved successfully.')
-      const listResponse = await fetch(`http://192.168.8.163:3001/api/production-plans?date=${encodeURIComponent(planDate)}`)
+      const listResponse = await fetch(`${API_BASE_URL}/api/production-plans?date=${encodeURIComponent(planDate)}`)
       const listResult = await listResponse.json()
       if (listResponse.ok) setPlanRows(listResult.data || [])
     } catch (error) {
@@ -552,7 +555,7 @@ function App() {
           date: utilizationDate,
           machine: utilizationMachine.trim(),
         })
-        const response = await fetch(`http://192.168.8.163:3001/api/hourly-data?${params.toString()}`)
+        const response = await fetch(`${API_BASE_URL}/api/hourly-data?${params.toString()}`)
         const result = await response.json()
         if (!response.ok) throw new Error(result.message || 'Unable to load utilization data.')
         if (!cancelled) {
@@ -581,7 +584,7 @@ function App() {
 
   async function loadUtilityMeters() {
     try {
-      const response = await fetch('http://192.168.8.163:3001/api/utility-meters')
+      const response = await fetch(`${API_BASE_URL}/api/utility-meters`)
       const result = await response.json()
       if (!response.ok) throw new Error(result.message || 'Unable to load utility meters.')
       const meters = result.data || []
@@ -599,7 +602,7 @@ function App() {
     setUtilityLoading(true)
     try {
       const params = new URLSearchParams({ meter_code: meterCode, limit: '100' })
-      const response = await fetch(`http://192.168.8.163:3001/api/utility-readings?${params.toString()}`)
+      const response = await fetch(`${API_BASE_URL}/api/utility-readings?${params.toString()}`)
       const result = await response.json()
       if (!response.ok) throw new Error(result.message || 'Unable to load meter readings.')
       setUtilityReadings(result.data || [])
@@ -623,7 +626,7 @@ function App() {
       }
       if (!utilityReadingTime) throw new Error('Select the reading date and time.')
       const readingTime = utilityReadingTime.replace('T', ' ') + ':00'
-      const response = await fetch('http://192.168.8.163:3001/api/utility-readings', {
+      const response = await fetch(`${API_BASE_URL}/api/utility-readings`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -666,7 +669,7 @@ function App() {
       const params = new URLSearchParams()
       if (calibrationFilter !== 'All') params.set('status', calibrationFilter)
       const suffix = params.toString() ? `?${params.toString()}` : ''
-      const response = await fetch(`http://192.168.8.163:3001/api/calibration-plans${suffix}`)
+      const response = await fetch(`${API_BASE_URL}/api/calibration-plans${suffix}`)
       const result = await response.json()
       if (!response.ok) throw new Error(result.message || 'Unable to load calibration plans.')
       setCalibrationPlans(result.data || [])
@@ -696,7 +699,7 @@ function App() {
     setCalibrationMessage('')
     setCalibrationMessageError(false)
     try {
-      const response = await fetch('http://192.168.8.163:3001/api/production-plan/verify-pin', {
+      const response = await fetch(`${API_BASE_URL}/api/production-plan/verify-pin`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pin: calibrationPin }),
@@ -757,8 +760,8 @@ function App() {
       const isEditing = editingCalibrationId !== null
       const response = await fetch(
         isEditing
-          ? `http://192.168.8.163:3001/api/calibration-plans/${editingCalibrationId}`
-          : 'http://192.168.8.163:3001/api/calibration-plans',
+          ? `${API_BASE_URL}/api/calibration-plans/${editingCalibrationId}`
+          : `${API_BASE_URL}/api/calibration-plans`,
         {
           method: isEditing ? 'PUT' : 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -809,7 +812,7 @@ function App() {
     setCalibrationMessage('')
     setCalibrationMessageError(false)
     try {
-      const response = await fetch(`http://192.168.8.163:3001/api/calibration-plans/${plan.id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/calibration-plans/${plan.id}`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pin: calibrationPin }),
@@ -912,56 +915,60 @@ function App() {
         </header>
 
         <div className="page-content">
-          <div className="page-title-row">
-            <div>
-              <div className="eyebrow">FACTORY PERFORMANCE CENTER</div>
-              <h1>
-                {activePage === 'Dashboard'
-                  ? 'Industrial OEE Dashboard'
-                  : activePage}
-              </h1>
-              <p className="page-subtitle">
-                Real-time production visibility and manufacturing performance
-              </p>
-            </div>
+          {activePage !== 'Manpower' && (
+            <div className="page-title-row">
+              <div>
+                <div className="eyebrow">FACTORY PERFORMANCE CENTER</div>
+                <h1>
+                  {activePage === 'Dashboard'
+                    ? 'Industrial OEE Dashboard'
+                    : activePage}
+                </h1>
+                <p className="page-subtitle">
+                  Real-time production visibility and manufacturing performance
+                </p>
+              </div>
 
-            <div className="page-filters">
-              <label className="filter-box">
-                <span>Production date</span>
-                <input
-                  type="date"
-                  value={selectedDate}
-                  onChange={(event) =>
-                    setSelectedDate(event.target.value)
-                  }
-                />
-              </label>
+              <div className="page-filters">
+                <label className="filter-box">
+                  <span>Production date</span>
+                  <input
+                    type="date"
+                    value={selectedDate}
+                    onChange={(event) =>
+                      setSelectedDate(event.target.value)
+                    }
+                  />
+                </label>
 
-              <label className="filter-box">
-                <span>Production period</span>
-                <select
-                  value={selectedPeriod}
-                  onChange={(event) =>
-                    setSelectedPeriod(event.target.value)
-                  }
+                <label className="filter-box">
+                  <span>Production period</span>
+                  <select
+                    value={selectedPeriod}
+                    onChange={(event) =>
+                      setSelectedPeriod(event.target.value)
+                    }
+                  >
+                    <option>Today</option>
+                    <option>Yesterday</option>
+                    <option>This week</option>
+                    <option>This month</option>
+                  </select>
+                </label>
+
+                <button
+                  className="primary-button"
+                  onClick={() => window.print()}
                 >
-                  <option>Today</option>
-                  <option>Yesterday</option>
-                  <option>This week</option>
-                  <option>This month</option>
-                </select>
-              </label>
-
-              <button
-                className="primary-button"
-                onClick={() => window.print()}
-              >
-                ⇩ <span>Export</span>
-              </button>
+                  ⇩ <span>Export</span>
+                </button>
+              </div>
             </div>
-          </div>
+          )}
 
-          {activePage === 'Utilization' ? (
+          {activePage === 'Manpower' ? (
+            <ManpowerManagement />
+          ) : activePage === 'Utilization' ? (
             <section className="panel" style={{ marginTop: 20 }}>
               <SectionTitle
                 title="Machine Utilization"
