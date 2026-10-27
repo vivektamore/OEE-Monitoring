@@ -5,11 +5,34 @@ const express = require('express');
 const mysql = require('mysql2/promise');
 const cors = require('cors');
 const crypto = require('crypto');
+const nodemailer = require('nodemailer');
 
 const app = express();
 
 app.use(cors());
 app.use(express.json({ limit: '100kb' }));
+
+function createMailTransporter() {
+    const host = process.env.SMTP_HOST || 'smtp.gmail.com';
+    const port = Number(process.env.SMTP_PORT || 465);
+    const secure = process.env.SMTP_SECURE === 'true' || port === 465;
+    const user = process.env.SMTP_USER;
+    const pass = process.env.SMTP_PASS;
+
+    if (!user || !pass) {
+        return null;
+    }
+
+    return nodemailer.createTransport({
+        host,
+        port,
+        secure,
+        auth: {
+            user,
+            pass
+        }
+    });
+}
 
 // ==========================================
 // MySQL connection pool
@@ -1951,14 +1974,496 @@ app.get('/api/manpower/monthly-matrix', async (req, res) => {
     }
 });
 
-// API 18: Test route
 // ==========================================
-app.get('/api/test-route', (req, res) => {
-    res.json({
-        status: 'OK',
-        message: 'This server.js file is running'
-    });
+// API 19: Report Generation & Download Data
+// ==========================================
+app.get('/api/reports/data', async (req, res) => {
+    try {
+        const {
+            startDate,
+            endDate,
+            cell = 'ALL',
+            machine = 'ALL',
+            planName = 'ALL',
+            planStatus = 'ALL',
+            timeBreakdown = 'both', // 'day_wise', 'shift_wise', 'both'
+            shift = 'ALL'           // 'ALL', 'Shift A', 'Shift B', 'Shift C'
+        } = req.query;
+
+        // Build base condition for hourly data
+        let sqlHourly = `
+            SELECT 
+                d.production_date,
+                m.machine_code,
+                m.machine_name,
+                c.cell_code,
+                c.cell_name,
+                d.hour_no,
+                COALESCE(d.total_quantity, 0) AS total_quantity,
+                COALESCE(d.good_quantity, 0) AS good_quantity,
+                COALESCE(d.reject_quantity, 0) AS reject_quantity,
+                COALESCE(d.running_minutes, 0) AS running_minutes,
+                COALESCE(d.downtime_minutes, 0) AS downtime_minutes,
+                COALESCE(d.availability, 0) AS availability,
+                COALESCE(d.performance, 0) AS performance,
+                COALESCE(d.quality, 0) AS quality,
+                COALESCE(d.oee, 0) AS oee
+            FROM machine_hourly_data d
+            JOIN machines m ON d.machine_id = m.id
+            LEFT JOIN cells c ON (m.cell_id = c.cell_code OR m.cell_id = c.id)
+            WHERE 1=1
+        `;
+        const hourlyParams = [];
+
+        if (startDate) {
+            sqlHourly += ' AND d.production_date >= ?';
+            hourlyParams.push(startDate);
+        }
+        if (endDate) {
+            sqlHourly += ' AND d.production_date <= ?';
+            hourlyParams.push(endDate);
+        }
+        if (cell !== 'ALL') {
+            sqlHourly += ' AND (c.cell_code = ? OR c.id = ?)';
+            hourlyParams.push(cell, cell);
+        }
+        if (machine !== 'ALL') {
+            sqlHourly += ' AND m.machine_code = ?';
+            hourlyParams.push(machine);
+        }
+
+        // Shift filter on hour_no:
+        // Shift A: 1-8, Shift B: 9-16, Shift C: 17-24
+        if (shift === 'Shift A') {
+            sqlHourly += ' AND d.hour_no BETWEEN 1 AND 8';
+        } else if (shift === 'Shift B') {
+            sqlHourly += ' AND d.hour_no BETWEEN 9 AND 16';
+        } else if (shift === 'Shift C') {
+            sqlHourly += ' AND d.hour_no BETWEEN 17 AND 24';
+        }
+
+        sqlHourly += ' ORDER BY d.production_date DESC, m.machine_code ASC, d.hour_no ASC';
+
+        const [hourlyRows] = await pool.execute(sqlHourly, hourlyParams);
+
+        // Fetch production plans
+        let sqlPlan = `
+            SELECT 
+                p.id,
+                p.plan_name,
+                p.plan_date,
+                p.shop_name,
+                p.machine_name,
+                p.planned_quantity,
+                p.status
+            FROM production_plan p
+            WHERE 1=1
+        `;
+        const planParams = [];
+        if (startDate) {
+            sqlPlan += ' AND p.plan_date >= ?';
+            planParams.push(startDate);
+        }
+        if (endDate) {
+            sqlPlan += ' AND p.plan_date <= ?';
+            planParams.push(endDate);
+        }
+        if (machine !== 'ALL') {
+            sqlPlan += ' AND p.machine_name = ?';
+            planParams.push(machine);
+        }
+        if (planName !== 'ALL') {
+            sqlPlan += ' AND p.plan_name = ?';
+            planParams.push(planName);
+        }
+        if (planStatus !== 'ALL') {
+            sqlPlan += ' AND p.status = ?';
+            planParams.push(planStatus);
+        }
+
+        const [planRows] = await pool.execute(sqlPlan, planParams);
+
+        // Build lookup map for plans: key = `${plan_date}_${machine_name}`
+        const planMap = {};
+        planRows.forEach(p => {
+            const dateStr = typeof p.plan_date === 'string' ? p.plan_date.slice(0, 10) : new Date(p.plan_date).toISOString().slice(0, 10);
+            const key = `${dateStr}_${p.machine_name}`;
+            if (!planMap[key]) {
+                planMap[key] = [];
+            }
+            planMap[key].push(p);
+        });
+
+        // Group hourly rows into day-wise and shift-wise buckets
+        const records = [];
+
+        // Helper to determine shift from hour_no
+        function getShift(h) {
+            if (h >= 1 && h <= 8) return 'Shift A';
+            if (h >= 9 && h <= 16) return 'Shift B';
+            return 'Shift C';
+        }
+
+        // Aggregate by date, machine, and shift
+        const grouped = {};
+        hourlyRows.forEach(r => {
+            const dateStr = typeof r.production_date === 'string' ? r.production_date.slice(0, 10) : new Date(r.production_date).toISOString().slice(0, 10);
+            const shiftName = getShift(r.hour_no);
+            const groupKey = `${dateStr}_${r.machine_code}_${shiftName}`;
+
+            if (!grouped[groupKey]) {
+                grouped[groupKey] = {
+                    date: dateStr,
+                    cell_id: r.cell_id,
+                    cell_name: r.cell_name,
+                    machine_code: r.machine_code,
+                    machine_name: r.machine_name,
+                    shift: shiftName,
+                    total_quantity: 0,
+                    good_quantity: 0,
+                    reject_quantity: 0,
+                    running_minutes: 0,
+                    downtime_minutes: 0,
+                    oee_sum: 0,
+                    hours_count: 0
+                };
+            }
+            grouped[groupKey].total_quantity += Number(r.total_quantity);
+            grouped[groupKey].good_quantity += Number(r.good_quantity);
+            grouped[groupKey].reject_quantity += Number(r.reject_quantity);
+            grouped[groupKey].running_minutes += Number(r.running_minutes);
+            grouped[groupKey].downtime_minutes += Number(r.downtime_minutes);
+            grouped[groupKey].oee_sum += Number(r.oee);
+            grouped[groupKey].hours_count += 1;
+        });
+
+        // Daily aggregates for day_wise or plan vs actual calculation
+        const dailyGrouped = {};
+        Object.values(grouped).forEach(g => {
+            const dKey = `${g.date}_${g.machine_code}`;
+            if (!dailyGrouped[dKey]) {
+                dailyGrouped[dKey] = {
+                    date: g.date,
+                    cell_id: g.cell_id,
+                    cell_name: g.cell_name,
+                    machine_code: g.machine_code,
+                    machine_name: g.machine_name,
+                    shift: 'Day Total',
+                    total_quantity: 0,
+                    good_quantity: 0,
+                    reject_quantity: 0,
+                    running_minutes: 0,
+                    downtime_minutes: 0,
+                    oee_sum: 0,
+                    hours_count: 0
+                };
+            }
+            dailyGrouped[dKey].total_quantity += g.total_quantity;
+            dailyGrouped[dKey].good_quantity += g.good_quantity;
+            dailyGrouped[dKey].reject_quantity += g.reject_quantity;
+            dailyGrouped[dKey].running_minutes += g.running_minutes;
+            dailyGrouped[dKey].downtime_minutes += g.downtime_minutes;
+            dailyGrouped[dKey].oee_sum += g.oee_sum;
+            dailyGrouped[dKey].hours_count += g.hours_count;
+        });
+
+        // Combine into final list based on timeBreakdown
+        const shiftList = Object.values(grouped);
+        const dailyList = Object.values(dailyGrouped);
+
+        let combined = [];
+        if (timeBreakdown === 'shift_wise') {
+            combined = shiftList;
+        } else if (timeBreakdown === 'day_wise') {
+            combined = dailyList;
+        } else {
+            // Both: list shifts followed by day total
+            combined = [...shiftList, ...dailyList];
+        }
+
+        // Attach plan name, status, planned_quantity, and plan vs actual
+        const formatted = combined.map(item => {
+            const dKey = `${item.date}_${item.machine_code}`;
+            const matchedPlans = planMap[dKey] || [];
+            const planObj = matchedPlans[0] || null;
+
+            const planNameVal = planObj ? planObj.plan_name : 'Standard Plan';
+            const planStatusVal = planObj ? planObj.status : 'Active';
+            // If shift-wise, allocate 1/3 of daily plan target for comparison
+            const fullDailyPlan = planObj ? Number(planObj.planned_quantity) : 0;
+            const plannedQty = item.shift === 'Day Total' ? fullDailyPlan : Math.round(fullDailyPlan / 3);
+            const actualQty = item.total_quantity;
+            const variance = actualQty - plannedQty;
+            const achievementPct = plannedQty > 0 ? Number(((actualQty / plannedQty) * 100).toFixed(1)) : 100.0;
+            const avgOee = item.hours_count > 0 ? Number((item.oee_sum / item.hours_count).toFixed(1)) : 0;
+
+            return {
+                date: item.date,
+                cell: item.cell_name,
+                machine: `${item.machine_code} - ${item.machine_name}`,
+                shift: item.shift,
+                plan_name: planNameVal,
+                plan_status: planStatusVal,
+                planned_quantity: plannedQty,
+                actual_quantity: actualQty,
+                good_quantity: item.good_quantity,
+                reject_quantity: item.reject_quantity,
+                variance: variance,
+                achievement_pct: achievementPct,
+                running_minutes: item.running_minutes,
+                downtime_minutes: item.downtime_minutes,
+                average_oee: avgOee
+            };
+        });
+
+        // Filter by planName and planStatus if passed
+        let finalRows = formatted;
+        if (planName !== 'ALL') {
+            finalRows = finalRows.filter(r => r.plan_name === planName);
+        }
+        if (planStatus !== 'ALL') {
+            finalRows = finalRows.filter(r => r.plan_status === planStatus);
+        }
+
+        res.json({
+            count: finalRows.length,
+            data: finalRows
+        });
+    } catch (error) {
+        console.error('Report data error:', error.message);
+        res.status(500).json({ message: 'Unable to generate report data.' });
+    }
 });
+
+// ==========================================
+// API 20: Scheduled Reports CRUD
+// ==========================================
+app.get('/api/reports/schedules', async (req, res) => {
+    try {
+        const [rows] = await pool.execute(`
+            SELECT 
+                id,
+                report_name,
+                primary_email,
+                additional_emails,
+                schedule_cadence,
+                generation_time,
+                cell_id,
+                machine_code,
+                plan_name,
+                plan_status,
+                time_breakdown,
+                shift_selection,
+                include_plan_vs_actual,
+                report_format,
+                is_active,
+                last_run_at,
+                created_at
+            FROM scheduled_reports
+            ORDER BY id DESC
+        `);
+        res.json({ count: rows.length, data: rows });
+    } catch (error) {
+        console.error('Schedules query error:', error.message);
+        res.status(500).json({ message: 'Unable to load scheduled reports.' });
+    }
+});
+
+app.post('/api/reports/schedules', async (req, res) => {
+    try {
+        const {
+            report_name = 'Production & Plan Report',
+            primary_email,
+            additional_emails = '',
+            schedule_cadence = 'Daily',
+            generation_time = '18:00',
+            cell_id = 'ALL',
+            machine_code = 'ALL',
+            plan_name = 'ALL',
+            plan_status = 'ALL',
+            time_breakdown = 'both',
+            shift_selection = 'ALL',
+            include_plan_vs_actual = true,
+            report_format = 'Excel'
+        } = req.body;
+
+        if (!primary_email || !primary_email.includes('@')) {
+            return res.status(400).json({ message: 'A valid primary recipient email is required.' });
+        }
+
+        const [result] = await pool.execute(`
+            INSERT INTO scheduled_reports (
+                report_name,
+                primary_email,
+                additional_emails,
+                schedule_cadence,
+                generation_time,
+                cell_id,
+                machine_code,
+                plan_name,
+                plan_status,
+                time_breakdown,
+                shift_selection,
+                include_plan_vs_actual,
+                report_format
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `, [
+            report_name,
+            primary_email.trim(),
+            typeof additional_emails === 'string' ? additional_emails.trim() : JSON.stringify(additional_emails),
+            schedule_cadence,
+            generation_time,
+            cell_id,
+            machine_code,
+            plan_name,
+            plan_status,
+            time_breakdown,
+            shift_selection,
+            include_plan_vs_actual ? 1 : 0,
+            report_format
+        ]);
+
+        res.status(201).json({
+            message: 'Report schedule registered successfully.',
+            id: result.insertId
+        });
+    } catch (error) {
+        console.error('Save schedule error:', error.message);
+        res.status(500).json({ message: 'Unable to save report schedule.' });
+    }
+});
+
+app.delete('/api/reports/schedules/:id', async (req, res) => {
+    try {
+        const id = Number(req.params.id);
+        if (!Number.isInteger(id) || id < 1) {
+            return res.status(400).json({ message: 'Invalid schedule ID.' });
+        }
+        const [result] = await pool.execute('DELETE FROM scheduled_reports WHERE id = ?', [id]);
+        if (!result.affectedRows) {
+            return res.status(404).json({ message: 'Schedule not found.' });
+        }
+        res.json({ message: 'Scheduled report removed successfully.' });
+    } catch (error) {
+        console.error('Delete schedule error:', error.message);
+        res.status(500).json({ message: 'Unable to delete report schedule.' });
+    }
+});
+
+// ==========================================
+// API 21: Fire / Trigger Report Email Now
+// ==========================================
+app.post('/api/reports/schedules/:id/trigger', async (req, res) => {
+    try {
+        const id = Number(req.params.id);
+        if (!Number.isInteger(id) || id < 1) {
+            return res.status(400).json({ message: 'Invalid schedule ID.' });
+        }
+
+        const [schedules] = await pool.execute('SELECT * FROM scheduled_reports WHERE id = ?', [id]);
+        if (!schedules.length) {
+            return res.status(404).json({ message: 'Schedule not found.' });
+        }
+        const sched = schedules[0];
+
+        // Gather all recipients
+        const recipients = [sched.primary_email];
+        if (sched.additional_emails) {
+            sched.additional_emails.split(',').forEach(em => {
+                const clean = em.trim();
+                if (clean && clean.includes('@') && !recipients.includes(clean)) {
+                    recipients.push(clean);
+                }
+            });
+        }
+
+        const transporter = createMailTransporter();
+        if (!transporter) {
+            return res.status(503).json({
+                message: 'SMTP credentials not configured. Please add SMTP_PASS in the backend .env file.',
+                recipients: recipients
+            });
+        }
+
+        // Fetch production data for the report attachment
+        const today = new Date().toISOString().slice(0, 10);
+        const [rows] = await pool.execute(`
+            SELECT 
+                d.production_date,
+                m.machine_code,
+                m.machine_name,
+                c.cell_name,
+                d.hour_no,
+                COALESCE(d.total_quantity, 0) AS total_quantity,
+                COALESCE(d.good_quantity, 0) AS good_quantity,
+                COALESCE(d.reject_quantity, 0) AS reject_quantity,
+                COALESCE(d.running_minutes, 0) AS running_minutes,
+                COALESCE(d.downtime_minutes, 0) AS downtime_minutes,
+                COALESCE(d.oee, 0) AS oee
+            FROM machine_hourly_data d
+            JOIN machines m ON d.machine_id = m.id
+            LEFT JOIN cells c ON (m.cell_id = c.cell_code OR m.cell_id = c.id)
+            ORDER BY d.production_date DESC, m.machine_code ASC, d.hour_no ASC
+            LIMIT 50
+        `);
+
+        // Generate CSV attachment content
+        let csvContent = 'Production Date,Machine,Cell,Hour,Total Qty,Good Qty,Reject Qty,Running Min,Downtime Min,OEE %\n';
+        rows.forEach(r => {
+            const dateStr = typeof r.production_date === 'string' ? r.production_date.slice(0, 10) : new Date(r.production_date).toISOString().slice(0, 10);
+            csvContent += `"${dateStr}","${r.machine_code} - ${r.machine_name}","${r.cell_name || ''}",${r.hour_no},${r.total_quantity},${r.good_quantity},${r.reject_quantity},${r.running_minutes},${r.downtime_minutes},"${r.oee}%"\n`;
+        });
+
+        const fromAddress = process.env.SMTP_FROM || `"OEE Monitoring System" <${process.env.SMTP_USER}>`;
+        const mailOptions = {
+            from: fromAddress,
+            to: recipients.join(', '),
+            subject: `[OEE Report] ${sched.report_name} - ${today}`,
+            html: `
+                <div style="font-family: Arial, sans-serif; color: #1e293b; max-width: 600px; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
+                    <h2 style="color: #2563eb; margin-top: 0;">📊 OEE Monitoring System - Automated Report</h2>
+                    <p>Hello,</p>
+                    <p>Here is your scheduled production & OEE performance report.</p>
+                    <table style="width: 100%; border-collapse: collapse; margin: 18px 0; font-size: 13px;">
+                        <tr><td style="padding: 6px 10px; border: 1px solid #cbd5e1; font-weight: bold; background: #f8fafc;">Report Name:</td><td style="padding: 6px 10px; border: 1px solid #cbd5e1;">${sched.report_name}</td></tr>
+                        <tr><td style="padding: 6px 10px; border: 1px solid #cbd5e1; font-weight: bold; background: #f8fafc;">Cadence:</td><td style="padding: 6px 10px; border: 1px solid #cbd5e1;">${sched.schedule_cadence} @ ${sched.generation_time}</td></tr>
+                        <tr><td style="padding: 6px 10px; border: 1px solid #cbd5e1; font-weight: bold; background: #f8fafc;">Plan Filter:</td><td style="padding: 6px 10px; border: 1px solid #cbd5e1;">${sched.plan_name} (${sched.plan_status})</td></tr>
+                        <tr><td style="padding: 6px 10px; border: 1px solid #cbd5e1; font-weight: bold; background: #f8fafc;">Breakdown:</td><td style="padding: 6px 10px; border: 1px solid #cbd5e1;">${sched.time_breakdown} / ${sched.shift_selection}</td></tr>
+                    </table>
+                    <p>The detailed spreadsheet report has been generated and attached to this email.</p>
+                    <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;" />
+                    <p style="font-size: 11px; color: #64748b;">Dispatched automatically by OEE Monitoring Industrial Server.</p>
+                </div>
+            `,
+            attachments: [
+                {
+                    filename: `OEE_Report_${today}.csv`,
+                    content: csvContent,
+                    contentType: 'text/csv'
+                }
+            ]
+        };
+
+        const info = await transporter.sendMail(mailOptions);
+        console.log('Report email sent:', info.messageId, 'to:', recipients);
+
+        // Update last_run_at
+        await pool.execute('UPDATE scheduled_reports SET last_run_at = NOW() WHERE id = ?', [id]);
+
+        res.json({
+            message: `Report email fired successfully to ${recipients.length} recipients (${recipients.join(', ')}).`,
+            messageId: info.messageId,
+            recipients: recipients
+        });
+    } catch (error) {
+        console.error('Trigger email error:', error);
+        res.status(500).json({
+            message: `Failed to dispatch email: ${error.message}`
+        });
+    }
+});
+
+
 
 // ==========================================
 // Start backend server

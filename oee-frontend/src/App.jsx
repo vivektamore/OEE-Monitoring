@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import './App.css'
 import ManpowerManagement from './components/ManpowerManagement'
 
@@ -200,15 +200,26 @@ function App() {
 
   // Reports page state
   const [reportEmail, setReportEmail] = useState('')
+  const [additionalEmails, setAdditionalEmails] = useState([])
+  const [newEmailInput, setNewEmailInput] = useState('')
   const [reportSchedule, setReportSchedule] = useState('Daily')
   const [reportTime, setReportTime] = useState('18:00')
-  const [reportCell, setReportCell] = useState('A')
-  const [reportMachine, setReportMachine] = useState('AA1')
-  const [reportType, setReportType] = useState('Hourly')
+  const [reportCell, setReportCell] = useState('ALL')
+  const [reportMachine, setReportMachine] = useState('ALL')
+  const [reportPlanName, setReportPlanName] = useState('ALL')
+  const [reportPlanStatus, setReportPlanStatus] = useState('ALL')
+  const [reportTimeBreakdown, setReportTimeBreakdown] = useState('both') // 'shift_wise', 'day_wise', 'both'
+  const [reportShift, setReportShift] = useState('ALL') // 'ALL', 'Shift A', 'Shift B', 'Shift C'
+  const [reportIncludePlanVsActual, setReportIncludePlanVsActual] = useState(true)
   const [reportStartDate, setReportStartDate] = useState(selectedDate)
   const [reportEndDate, setReportEndDate] = useState(selectedDate)
-  const [reportFormat, setReportFormat] = useState('PDF')
+  const [reportFormat, setReportFormat] = useState('Excel')
   const [reportMessage, setReportMessage] = useState('')
+  const [reportMessageError, setReportMessageError] = useState(false)
+  const [reportPreviewData, setReportPreviewData] = useState([])
+  const [reportLoading, setReportLoading] = useState(false)
+  const [savedSchedules, setSavedSchedules] = useState([])
+  const [schedulesLoading, setSchedulesLoading] = useState(false)
 
 
   // Maintenance: utility meter readings from the backend.
@@ -593,6 +604,222 @@ function App() {
       clearInterval(timer)
     }
   }, [activePage, utilizationDate, utilizationMachine])
+
+  // Load report schedules whenever report page is opened
+  const loadReportSchedules = useCallback(async () => {
+    setSchedulesLoading(true)
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/reports/schedules`)
+      const json = await res.json()
+      if (res.ok) {
+        setSavedSchedules(json.data || [])
+      }
+    } catch {
+      // ignore
+    } finally {
+      setSchedulesLoading(false)
+    }
+  }, [API_BASE_URL])
+
+  useEffect(() => {
+    if (activePage === 'Automatic Report Generator' || activePage === 'Reports') {
+      loadReportSchedules()
+    }
+  }, [activePage, loadReportSchedules])
+
+  // Add additional email tag
+  function addAdditionalEmail() {
+    const trimmed = newEmailInput.trim().toLowerCase()
+    if (!trimmed || !trimmed.includes('@')) {
+      setReportMessage('Please enter a valid email address.')
+      setReportMessageError(true)
+      return
+    }
+    if (additionalEmails.includes(trimmed) || reportEmail.toLowerCase() === trimmed) {
+      setReportMessage('This email has already been added.')
+      setReportMessageError(true)
+      return
+    }
+    setAdditionalEmails([...additionalEmails, trimmed])
+    setNewEmailInput('')
+    setReportMessage('')
+    setReportMessageError(false)
+  }
+
+  function removeAdditionalEmail(indexToRemove) {
+    setAdditionalEmails(additionalEmails.filter((_, idx) => idx !== indexToRemove))
+  }
+
+  // Handle immediate CSV / Excel data download
+  async function handleDownloadReport(format = reportFormat) {
+    setReportLoading(true)
+    setReportMessage('')
+    setReportMessageError(false)
+    try {
+      const params = new URLSearchParams({
+        startDate: reportStartDate,
+        endDate: reportEndDate,
+        cell: reportCell,
+        machine: reportMachine,
+        planName: reportPlanName,
+        planStatus: reportPlanStatus,
+        timeBreakdown: reportTimeBreakdown,
+        shift: reportShift,
+      })
+      const res = await fetch(`${API_BASE_URL}/api/reports/data?${params.toString()}`)
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.message || 'Unable to fetch report data.')
+
+      const rows = json.data || []
+      setReportPreviewData(rows)
+
+      if (rows.length === 0) {
+        setReportMessage('No production data found matching the selected filters.')
+        setReportMessageError(true)
+        return
+      }
+
+      // Generate CSV string
+      const headers = [
+        'Production Date',
+        'Cell',
+        'Machine',
+        'Shift',
+        'Plan Name',
+        'Plan Status',
+        'Planned Qty',
+        'Actual Qty',
+        'Good Qty',
+        'Reject Qty',
+        'Variance (Diff)',
+        'Achievement %',
+        'Running Minutes',
+        'Downtime Minutes',
+        'Avg OEE %'
+      ]
+
+      const csvRows = [
+        headers.join(','),
+        ...rows.map(r => [
+          `"${r.date}"`,
+          `"${r.cell || ''}"`,
+          `"${r.machine || ''}"`,
+          `"${r.shift || ''}"`,
+          `"${r.plan_name || ''}"`,
+          `"${r.plan_status || ''}"`,
+          r.planned_quantity,
+          r.actual_quantity,
+          r.good_quantity,
+          r.reject_quantity,
+          r.variance,
+          `"${r.achievement_pct}%"`,
+          r.running_minutes,
+          r.downtime_minutes,
+          `"${r.average_oee}%"`
+        ].join(','))
+      ]
+
+      const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      const ext = format === 'Excel' ? 'csv' : (format.toLowerCase() === 'pdf' ? 'csv' : 'csv')
+      link.href = url
+      link.setAttribute('download', `OEE_Report_${reportStartDate}_to_${reportEndDate}_${reportShift.replace(/\s+/g, '_')}.${ext}`)
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+
+      setReportMessage(`Report prepared and downloaded successfully (${rows.length} rows).`)
+      setReportMessageError(false)
+    } catch (err) {
+      setReportMessage(err.message || 'Error generating report.')
+      setReportMessageError(true)
+    } finally {
+      setReportLoading(false)
+    }
+  }
+
+  // Save / Register automatic report schedule
+  async function handleSaveSchedule(e) {
+    e.preventDefault()
+    setReportLoading(true)
+    setReportMessage('')
+    setReportMessageError(false)
+    try {
+      if (!reportEmail || !reportEmail.includes('@')) {
+        throw new Error('Please provide a valid primary recipient email address.')
+      }
+
+      const payload = {
+        report_name: `${reportPlanName !== 'ALL' ? reportPlanName : 'OEE'} ${reportTimeBreakdown === 'shift_wise' ? 'Shift' : 'Production'} Report`,
+        primary_email: reportEmail,
+        additional_emails: additionalEmails.join(','),
+        schedule_cadence: reportSchedule,
+        generation_time: reportTime,
+        cell_id: reportCell,
+        machine_code: reportMachine,
+        plan_name: reportPlanName,
+        plan_status: reportPlanStatus,
+        time_breakdown: reportTimeBreakdown,
+        shift_selection: reportShift,
+        include_plan_vs_actual: reportIncludePlanVsActual,
+        report_format: reportFormat
+      }
+
+      const res = await fetch(`${API_BASE_URL}/api/reports/schedules`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.message || 'Unable to register schedule.')
+
+      setReportMessage('Automatic report schedule registered successfully!')
+      setReportMessageError(false)
+      loadReportSchedules()
+    } catch (err) {
+      setReportMessage(err.message || 'Error saving report schedule.')
+      setReportMessageError(true)
+    } finally {
+      setReportLoading(false)
+    }
+  }
+
+  async function handleDeleteSchedule(id) {
+    if (!window.confirm('Are you sure you want to delete this scheduled report?')) return
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/reports/schedules/${id}`, { method: 'DELETE' })
+      if (res.ok) {
+        loadReportSchedules()
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  async function handleTriggerReport(id) {
+    setReportLoading(true)
+    setReportMessage('Dispatching report email to recipients...')
+    setReportMessageError(false)
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/reports/schedules/${id}/trigger`, {
+        method: 'POST'
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.message || 'Unable to fire report email.')
+      setReportMessage(json.message || 'Report email fired successfully!')
+      setReportMessageError(false)
+      loadReportSchedules()
+    } catch (err) {
+      setReportMessage(err.message || 'Error sending report email.')
+      setReportMessageError(true)
+    } finally {
+      setReportLoading(false)
+    }
+  }
+
+
 
   async function loadUtilityMeters() {
     try {
@@ -1321,17 +1548,383 @@ function App() {
             </section>
           ) : activePage === 'Automatic Report Generator' ? (
             <section className="panel" style={{ marginTop: 20 }}>
-              <SectionTitle title="Automatic Report Generator" subtitle="Configure when and where reports should be delivered." right={<button className="secondary-button" onClick={() => setActivePage('Reports')}>← Back to Reports</button>} />
-              <form onSubmit={(event) => { event.preventDefault(); setReportMessage('Settings validated in the frontend only. Scheduled email delivery requires a backend scheduler and email service.'); }} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginTop: 22 }}>
-                <label className="filter-box"><span>Recipient email</span><input type="email" value={reportEmail} onChange={(event) => setReportEmail(event.target.value)} placeholder="name@company.com" required /></label>
-                <label className="filter-box"><span>Report schedule</span><select value={reportSchedule} onChange={(event) => setReportSchedule(event.target.value)}><option>Daily</option><option>Weekly</option><option>Monthly</option></select></label>
-                <label className="filter-box"><span>Generation time</span><input type="time" value={reportTime} onChange={(event) => setReportTime(event.target.value)} required /></label>
-                <label className="filter-box"><span>Cell / Shop</span><select value={reportCell} onChange={(event) => setReportCell(event.target.value)}><option value="A">Cell A — Press Shop</option><option value="B">Cell B — Screw Forging</option><option value="C">Cell C — Grooving</option><option value="D">Cell D — Deburring</option><option value="E">Cell E — Laser Marking</option><option value="ALL">All cells</option></select></label>
-                <label className="filter-box"><span>Machine code</span><input value={reportMachine} onChange={(event) => setReportMachine(event.target.value.toUpperCase())} placeholder="AA1 or ALL" required /></label>
-                <label className="filter-box"><span>Report data</span><select value={reportType} onChange={(event) => setReportType(event.target.value)}><option>Hourly</option><option>Daily</option><option>Monthly</option><option>Plan vs Actual</option><option>Running Time</option><option>Production Summary</option></select></label>
-                <label className="filter-box"><span>Report format</span><select value={reportFormat} onChange={(event) => setReportFormat(event.target.value)}><option>PDF</option><option>CSV</option><option>Excel</option></select></label>
-                <div style={{ gridColumn: '1 / -1' }}><button className="primary-button" type="submit">Validate Report Settings</button>{reportMessage && <p role="status" style={{ color: '#334155', marginTop: 14 }}>{reportMessage}</p>}</div>
+              <SectionTitle
+                title="Automatic Report Generator & Data Downloader"
+                subtitle="Filter by Plan Name, Plan Status, Shift-wise or Day-wise counts, and Plan vs Actual metrics. Download immediately or register automated email delivery with additional recipient IDs."
+                right={<button className="secondary-button" onClick={() => setActivePage('Reports')}>← Back to Reports</button>}
+              />
+
+              {/* Filter Form */}
+              <form onSubmit={handleSaveSchedule} style={{ marginTop: 22 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: 16 }}>
+                  
+                  {/* Plan Name Filter */}
+                  <label className="filter-box">
+                    <span>Plan Name</span>
+                    <select value={reportPlanName} onChange={(e) => setReportPlanName(e.target.value)}>
+                      <option value="ALL">All Plans</option>
+                      <option value="Standard Plan">Standard Plan</option>
+                      <option value="Standard Production Plan">Standard Production Plan</option>
+                      <option value="High Priority Run">High Priority Run</option>
+                    </select>
+                  </label>
+
+                  {/* Plan Status Filter */}
+                  <label className="filter-box">
+                    <span>Plan Status</span>
+                    <select value={reportPlanStatus} onChange={(e) => setReportPlanStatus(e.target.value)}>
+                      <option value="ALL">All Statuses</option>
+                      <option value="Active">Active</option>
+                      <option value="In Progress">In Progress</option>
+                      <option value="Completed">Completed</option>
+                      <option value="Pending">Pending</option>
+                    </select>
+                  </label>
+
+                  {/* Production Count Breakdown: Shift-wise vs Day-wise */}
+                  <label className="filter-box">
+                    <span>Production Count Breakdown</span>
+                    <select value={reportTimeBreakdown} onChange={(e) => setReportTimeBreakdown(e.target.value)}>
+                      <option value="both">Shift-wise & Day-wise (Both)</option>
+                      <option value="shift_wise">Shift-wise Breakdown Only</option>
+                      <option value="day_wise">Day-wise Summary Only</option>
+                    </select>
+                  </label>
+
+                  {/* Specific Shift Selection */}
+                  <label className="filter-box">
+                    <span>Shift Filter</span>
+                    <select value={reportShift} onChange={(e) => setReportShift(e.target.value)}>
+                      <option value="ALL">All Shifts (A, B & C)</option>
+                      <option value="Shift A">Shift A (06:45 – 14:45)</option>
+                      <option value="Shift B">Shift B (14:45 – 22:45)</option>
+                      <option value="Shift C">Shift C (22:45 – 06:45)</option>
+                    </select>
+                  </label>
+
+                  {/* Date Range Selection */}
+                  <label className="filter-box">
+                    <span>From Date</span>
+                    <input type="date" value={reportStartDate} onChange={(e) => setReportStartDate(e.target.value)} required />
+                  </label>
+                  <label className="filter-box">
+                    <span>To Date</span>
+                    <input type="date" min={reportStartDate} value={reportEndDate} onChange={(e) => setReportEndDate(e.target.value)} required />
+                  </label>
+
+                  {/* Cell / Shop */}
+                  <label className="filter-box">
+                    <span>Cell / Shop</span>
+                    <select value={reportCell} onChange={(e) => setReportCell(e.target.value)}>
+                      <option value="ALL">All Cells</option>
+                      <option value="A">Cell A — Press Shop</option>
+                      <option value="B">Cell B — Screw Forging</option>
+                      <option value="C">Cell C — Grooving</option>
+                      <option value="D">Cell D — Deburring</option>
+                      <option value="E">Cell E — Laser Marking</option>
+                    </select>
+                  </label>
+
+                  {/* Machine Code */}
+                  <label className="filter-box">
+                    <span>Machine Code</span>
+                    <input value={reportMachine} onChange={(e) => setReportMachine(e.target.value.toUpperCase())} placeholder="AA1 or ALL" required />
+                  </label>
+
+                  {/* Export Format */}
+                  <label className="filter-box">
+                    <span>Report Format</span>
+                    <select value={reportFormat} onChange={(e) => setReportFormat(e.target.value)}>
+                      <option value="Excel">Excel Spreadsheet (.csv / .xlsx)</option>
+                      <option value="CSV">Comma-Separated Values (.csv)</option>
+                      <option value="PDF">PDF Report Document</option>
+                    </select>
+                  </label>
+
+                  {/* Plan vs Actual Metric Toggle */}
+                  <label className="filter-box" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 10, cursor: 'pointer', paddingTop: 24 }}>
+                    <input
+                      type="checkbox"
+                      checked={reportIncludePlanVsActual}
+                      onChange={(e) => setReportIncludePlanVsActual(e.target.checked)}
+                      style={{ width: 18, height: 18, accentColor: '#2563eb' }}
+                    />
+                    <span style={{ fontSize: 13, fontWeight: 600, color: '#1e293b' }}>Include Plan vs Actual Count & Variance</span>
+                  </label>
+                </div>
+
+                {/* Email Registration & Additional Email IDs */}
+                <div style={{ marginTop: 20, padding: 16, backgroundColor: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0' }}>
+                  <h3 style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', marginBottom: 12 }}>
+                    📧 Email Delivery & Recipient Registration
+                  </h3>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16 }}>
+                    <label className="filter-box">
+                      <span>Primary Registered Email *</span>
+                      <input
+                        type="email"
+                        value={reportEmail}
+                        onChange={(e) => setReportEmail(e.target.value)}
+                        placeholder="manager@company.com"
+                        required
+                      />
+                    </label>
+
+                    <label className="filter-box">
+                      <span>Delivery Cadence</span>
+                      <select value={reportSchedule} onChange={(e) => setReportSchedule(e.target.value)}>
+                        <option value="Daily">Daily</option>
+                        <option value="Weekly">Weekly</option>
+                        <option value="Monthly">Monthly</option>
+                      </select>
+                    </label>
+
+                    <label className="filter-box">
+                      <span>Scheduled Send Time</span>
+                      <input
+                        type="time"
+                        value={reportTime}
+                        onChange={(e) => setReportTime(e.target.value)}
+                        required
+                      />
+                    </label>
+                  </div>
+
+                  {/* Add Additional Email IDs */}
+                  <div style={{ marginTop: 14 }}>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: '#475569', display: 'block', marginBottom: 6 }}>
+                      Additional Email IDs (Recipients will also receive scheduled report)
+                    </span>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                      <input
+                        type="email"
+                        placeholder="e.g. shift_lead@company.com"
+                        value={newEmailInput}
+                        onChange={(e) => setNewEmailInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault()
+                            addAdditionalEmail()
+                          }
+                        }}
+                        style={{
+                          padding: '7px 12px',
+                          border: '1px solid #cbd5e1',
+                          borderRadius: 6,
+                          fontSize: 13,
+                          minWidth: 260
+                        }}
+                      />
+                      <button
+                        type="button"
+                        className="secondary-button"
+                        onClick={addAdditionalEmail}
+                        style={{ padding: '7px 14px', fontSize: 13 }}
+                      >
+                        + Add Email ID
+                      </button>
+                    </div>
+
+                    {/* Email Chips List */}
+                    {additionalEmails.length > 0 && (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
+                        {additionalEmails.map((email, idx) => (
+                          <span
+                            key={idx}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 6,
+                              backgroundColor: '#e2e8f0',
+                              color: '#1e293b',
+                              fontSize: 12,
+                              fontWeight: 500,
+                              padding: '3px 10px',
+                              borderRadius: 14,
+                              border: '1px solid #cbd5e1'
+                            }}
+                          >
+                            {email}
+                            <button
+                              type="button"
+                              onClick={() => removeAdditionalEmail(idx)}
+                              style={{
+                                border: 'none',
+                                background: 'transparent',
+                                cursor: 'pointer',
+                                fontWeight: 'bold',
+                                color: '#64748b',
+                                padding: 0
+                              }}
+                            >
+                              ✕
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Action Buttons: Instant Download vs Register Schedule */}
+                <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', marginTop: 20 }}>
+                  <button
+                    type="button"
+                    className="primary-button"
+                    onClick={() => handleDownloadReport(reportFormat)}
+                    disabled={reportLoading}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 8, backgroundColor: '#059669', borderColor: '#059669' }}
+                  >
+                    📥 {reportLoading ? 'Processing Report...' : 'Download Report According to Filters'}
+                  </button>
+
+                  <button
+                    type="submit"
+                    className="primary-button"
+                    disabled={reportLoading}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}
+                  >
+                    ⏰ {reportLoading ? 'Saving...' : 'Register & Save Automatic Schedule'}
+                  </button>
+                </div>
+
+                {reportMessage && (
+                  <p
+                    role="status"
+                    style={{
+                      marginTop: 14,
+                      padding: '10px 14px',
+                      borderRadius: 6,
+                      backgroundColor: reportMessageError ? '#fef2f2' : '#f0fdf4',
+                      color: reportMessageError ? '#b91c1c' : '#15803d',
+                      border: `1px solid ${reportMessageError ? '#fecaca' : '#bbf7d0'}`,
+                      fontSize: 13,
+                      fontWeight: 500
+                    }}
+                  >
+                    {reportMessage}
+                  </p>
+                )}
               </form>
+
+              {/* Data Preview Table if generated */}
+              {reportPreviewData.length > 0 && (
+                <div style={{ marginTop: 28 }}>
+                  <h3 style={{ fontSize: 15, fontWeight: 700, color: '#0f172a', marginBottom: 10 }}>
+                    Report Preview ({reportPreviewData.length} records matching filters)
+                  </h3>
+                  <div className="table-scroll">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Date</th>
+                          <th>Shift</th>
+                          <th>Machine</th>
+                          <th>Plan Name</th>
+                          <th>Status</th>
+                          <th>Planned Qty</th>
+                          <th>Actual Qty</th>
+                          <th>Variance</th>
+                          <th>Achieve %</th>
+                          <th>Running (min)</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {reportPreviewData.slice(0, 10).map((row, idx) => (
+                          <tr key={idx}>
+                            <td><strong>{row.date}</strong></td>
+                            <td><span style={{ padding: '2px 8px', borderRadius: 10, fontSize: 11, fontWeight: 600, backgroundColor: row.shift === 'Day Total' ? '#e0f2fe' : '#f1f5f9', color: row.shift === 'Day Total' ? '#0369a1' : '#334155' }}>{row.shift}</span></td>
+                            <td>{row.machine}</td>
+                            <td>{row.plan_name}</td>
+                            <td><span style={{ color: '#16a34a', fontWeight: 600 }}>{row.plan_status}</span></td>
+                            <td>{Number(row.planned_quantity).toLocaleString()}</td>
+                            <td><strong>{Number(row.actual_quantity).toLocaleString()}</strong></td>
+                            <td style={{ color: row.variance >= 0 ? '#16a34a' : '#dc2626', fontWeight: 600 }}>
+                              {row.variance > 0 ? `+${row.variance.toLocaleString()}` : row.variance.toLocaleString()}
+                            </td>
+                            <td><strong>{row.achievement_pct}%</strong></td>
+                            <td>{row.running_minutes} min</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  {reportPreviewData.length > 10 && (
+                    <div style={{ fontSize: 12, color: '#64748b', marginTop: 8 }}>
+                      Showing top 10 rows in preview. Full dataset downloaded in export file.
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Registered Automatic Schedules Table */}
+              <div style={{ marginTop: 32, borderTop: '1px solid #e2e8f0', paddingTop: 20 }}>
+                <h3 style={{ fontSize: 15, fontWeight: 700, color: '#0f172a', marginBottom: 12 }}>
+                  📋 Registered Automatic Report Schedules ({savedSchedules.length})
+                </h3>
+                {schedulesLoading ? (
+                  <p style={{ color: '#64748b', fontSize: 13 }}>Loading schedules...</p>
+                ) : savedSchedules.length === 0 ? (
+                  <p style={{ color: '#64748b', fontSize: 13 }}>No automatic report schedules registered yet.</p>
+                ) : (
+                  <div className="table-scroll">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Report Name</th>
+                          <th>Cadence & Time</th>
+                          <th>Primary Email</th>
+                          <th>Additional Emails</th>
+                          <th>Plan & Status</th>
+                          <th>Breakdown / Shift</th>
+                          <th>Format</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {savedSchedules.map((s) => (
+                          <tr key={s.id}>
+                            <td><strong>{s.report_name}</strong></td>
+                            <td>{s.schedule_cadence} @ {s.generation_time}</td>
+                            <td><code>{s.primary_email}</code></td>
+                            <td>
+                              {s.additional_emails ? (
+                                <span style={{ fontSize: 12, color: '#475569' }}>
+                                  {s.additional_emails.split(',').join(', ')}
+                                </span>
+                              ) : (
+                                <span style={{ color: '#94a3b8' }}>None</span>
+                              )}
+                            </td>
+                            <td>{s.plan_name} ({s.plan_status})</td>
+                            <td>{s.time_breakdown} / {s.shift_selection}</td>
+                            <td><span style={{ fontWeight: 600 }}>{s.report_format}</span></td>
+                            <td style={{ whiteSpace: 'nowrap' }}>
+                              <button
+                                type="button"
+                                className="text-button"
+                                onClick={() => handleTriggerReport(s.id)}
+                                disabled={reportLoading}
+                                style={{ color: '#2563eb', fontWeight: 600, marginRight: 8 }}
+                              >
+                                ⚡ Send / Fire Now
+                              </button>
+                              <button
+                                type="button"
+                                className="text-button"
+                                onClick={() => handleDeleteSchedule(s.id)}
+                                style={{ color: '#dc2626' }}
+                              >
+                                Delete
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
             </section>
           ) : activePage === 'Manual Report Generator' ? (
             <section className="panel" style={{ marginTop: 20 }}>
